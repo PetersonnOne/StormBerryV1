@@ -1,0 +1,233 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  conversations Conversation[]
+  aiInteractions AIInteraction[]
+  analytics     UserAnalytics[]
+  preferences   UserPreferences?
+  tasks         Task[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  title     String
+  userId    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages         Message[]
+  aiInteractions   AIInteraction[]
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  content        String
+  role           MessageRole
+  conversationId String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  aiInteractions AIInteraction[]
+}
+
+model AIInteraction {
+  id             String              @id @default(cuid())
+  type           AIInteractionType
+  status         AIInteractionStatus @default(PENDING)
+  prompt         String
+  response       String?
+  metadata       Json?
+  tokensUsed     Int?
+  cost           Float?
+  duration       Int? // in milliseconds
+  userId         String
+  conversationId String?
+  messageId      String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message?     @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model UserAnalytics {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  metrics   Json
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model UserPreferences {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  theme             String   @default("light")
+  language          String   @default("en")
+  notifications     Boolean  @default(true)
+  aiModel           String   @default("gpt-3.5-turbo")
+  maxTokens         Int      @default(1000)
+  temperature       Float    @default(0.7)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum AIInteractionType {
+  CHAT
+  IMAGE_GENERATION
+  CODE_GENERATION
+  TEXT_ANALYSIS
+  TRANSLATION
+  SUMMARIZATION
+}
+
+enum AIInteractionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+model Task {
+  id              String      @id @default(uuid())
+  userId          String
+  title           String      @db.Text
+  description     String?     @db.Text
+  originTimezone  String
+  originDatetime  DateTime
+  localTimezone   String
+  localDatetime   DateTime
+  priority        TaskPriority
+  tags            Json?
+  recurrenceRule  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminders       Reminder[]
+  calendarEvents  CalendarEvent[]
+
+  @@index([userId])
+}
+
+model Reminder {
+  id                  String            @id @default(uuid())
+  taskId              String
+  notifyOffsetMinutes Int
+  notifyType          NotificationType
+  sent                Boolean           @default(false)
+  scheduledAt         DateTime
+  createdAt           DateTime          @default(now())
+
+  task                Task              @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([scheduledAt])
+}
+
+model CalendarEvent {
+  id              String    @id @default(uuid())
+  taskId          String
+  provider        String
+  externalEventId String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  task            Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalEventId])
+  @@index([taskId])
+}

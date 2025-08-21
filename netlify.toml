@@ -1,0 +1,24 @@
+[build]
+  publish = ".next"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--production=false"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  NODE_ENV = "production"
+  NEXT_PUBLIC_DEPLOYMENT_PLATFORM = "netlify"
+
+[context.deploy-preview.environment]
+  NODE_ENV = "production"
+  NEXT_PUBLIC_DEPLOYMENT_PLATFORM = "netlify"
+
+[context.branch-deploy.environment]
+  NODE_ENV = "production"
+  NEXT_PUBLIC_DEPLOYMENT_PLATFORM = "netlify"
