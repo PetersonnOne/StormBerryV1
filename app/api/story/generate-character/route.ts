@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { Configuration, OpenAIApi } from 'openai';
+import { auth } from '@/auth';
+import OpenAI from 'openai';
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
+    const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -20,11 +17,11 @@ export async function POST(req: Request) {
     }
 
     const existingCharactersContext = existingCharacters
-      ?.map(c => `${c.name} (${c.role}): ${c.description}`)
+      ?.map((c: { name: string; role: string; description: string }) => `${c.name} (${c.role}): ${c.description}`)
       .join('\n');
 
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-5-turbo',
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
       messages: [
         {
           role: 'system',
@@ -39,7 +36,7 @@ export async function POST(req: Request) {
       max_tokens: 1000,
     });
 
-    const generatedContent = completion.data.choices[0]?.message?.content || '';
+    const generatedContent = completion.choices[0]?.message?.content || '';
 
     // Parse the generated content into structured sections
     const sections = generatedContent.split('\n\n');
@@ -51,7 +48,7 @@ export async function POST(req: Request) {
       imagePrompt: '',
     };
 
-    sections.forEach(section => {
+    sections.forEach((section: string) => {
       if (section.toLowerCase().includes('physical description')) {
         response.description = section.replace(/^physical\s*description:?\s*/i, '');
       } else if (section.toLowerCase().includes('background')) {
@@ -61,7 +58,7 @@ export async function POST(req: Request) {
       } else if (section.toLowerCase().includes('goals')) {
         const goalsText = section.replace(/^goals:?\s*/i, '');
         response.goals = goalsText.split('\n')
-          .map(goal => goal.replace(/^[\d-.*]\s*/, '').trim())
+          .map((goal: string) => goal.replace(/^[\d-.*]\s*/, '').trim())
           .filter(Boolean);
       } else if (section.toLowerCase().includes('portrait prompt')) {
         response.imagePrompt = section.replace(/^portrait\s*prompt:?\s*/i, '');

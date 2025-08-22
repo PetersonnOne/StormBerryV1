@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { Client } from '@microsoft/microsoft-graph-client';
 import { prisma } from './prisma';
-import { Task } from '@prisma/client';
+import type { Task } from '@prisma/client';
 
 // Google Calendar Integration
 const googleAuth = new google.auth.OAuth2(

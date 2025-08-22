@@ -5,6 +5,10 @@ import { createReport } from 'docx-templates';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: any) => jsPDF;
+}
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Export to Markdown
@@ -112,7 +116,7 @@ export function exportToPDF(tasks: Task[]): Buffer {
     task.description || '',
   ]);
 
-  (doc as any).autoTable({
+  (doc as jsPDFWithAutoTable).autoTable({
     startY: 25,
     head: [['Title', 'Priority', 'Due Date', 'Timezone', 'Description']],
     body: tableData,

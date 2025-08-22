@@ -5,15 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Brain, ArrowRight } from 'lucide-react';
 
-const FeaturesPage = () => {
-  const [showPopup, setShowPopup] = useState(false);
-
-  const handleComingSoonClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setShowPopup(true);
-    setTimeout(() => setShowPopup(false), 3000);
-  };
-  const features = [
+const features = [
     {
       title: "ExperienceAI System",
       description: "This is the real-time visual AI interface, enabling users to analyze their environment through the mobile camera. Core capabilities include OCR, object detection, and scene understanding. Analysis results are presented using annotated visual overlays, persona-driven voice feedback (TTS), and context-sensitive haptic signals. A key feature is its integration with AI personas like \"Ada,\" whose traits influence how feedback is delivered—making interactions feel more personal and adaptive.",
@@ -45,6 +37,15 @@ const FeaturesPage = () => {
       icon: "📸"
     }
   ];
+
+const FeaturesPage = () => {
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handleComingSoonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 3000);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -94,7 +95,7 @@ const FeaturesPage = () => {
       {/* Features Grid */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Available Modules</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Coming Soon</h2>
           <p className="text-gray-600">Click any module to get started</p>
         </div>
 

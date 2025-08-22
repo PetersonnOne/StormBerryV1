@@ -1,4 +1,4 @@
-import { getStore } from '@netlify/blobs';
+import { getStore, Store } from '@netlify/blobs';
 
 interface GPTResponse {
   content: string;
@@ -17,10 +17,13 @@ interface QuizQuestion {
 
 export class GPTEducationService {
   private static instance: GPTEducationService;
-  private lessonStore = getStore({ name: 'education-lessons' });
-  private quizStore = getStore({ name: 'education-quizzes' });
+  private lessonStore: Store;
+  private quizStore: Store;
 
-  private constructor() {}
+  private constructor() {
+    this.lessonStore = getStore('education-lessons');
+    this.quizStore = getStore('education-quizzes');
+  }
 
   static getInstance(): GPTEducationService {
     if (!GPTEducationService.instance) {

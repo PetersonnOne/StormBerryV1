@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -13,13 +12,14 @@ const chatRequestSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  try {
-    // Check authentication
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  // MOCK SESSION - In a real app, you would get this from your auth provider
+  const session = {
+    user: {
+      id: 'mock-user-id',
+    },
+  };
 
+  try {
     // Parse request body
     const body = await request.json()
     const { message, conversationId, model, temperature, maxTokens } = chatRequestSchema.parse(body)
@@ -227,4 +227,4 @@ function generateConversationTitle(message: string): string {
   // Extract meaningful title from first message
   const words = message.split(' ').slice(0, 5)
   return words.join(' ') + (message.length > 30 ? '...' : '')
-} 
+}

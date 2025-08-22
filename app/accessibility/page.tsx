@@ -8,11 +8,14 @@ import SignLanguagePanel from '@/components/accessibility/sign-language-panel';
 import SettingsPanel from '@/components/accessibility/settings-panel';
 import ConversationHistory from '@/components/accessibility/conversation-history';
 
+type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
+type Contrast = 'normal' | 'high';
+
 export default function AccessibilityPage() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const [fontSize, setFontSize] = useState('medium');
-  const [contrast, setContrast] = useState('normal');
+  const [fontSize, setFontSize] = useState<FontSize>('medium');
+  const [contrast, setContrast] = useState<Contrast>('normal');
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function AccessibilityPage() {
 
         <TabsContent value="settings" className="space-y-4">
           <SettingsPanel
-            theme={theme}
+            theme={theme || 'light'}
             setTheme={setTheme}
             fontSize={fontSize}
             setFontSize={setFontSize}

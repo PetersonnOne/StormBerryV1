@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
+import { auth } from '@/auth';
 import { put, get } from '@vercel/blob';
-import { Configuration, OpenAIApi } from 'openai';
-
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
+import OpenAI from 'openai';
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
+    const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -154,6 +149,49 @@ export async function POST(req: Request) {
   }
 }
 
+// Define interfaces for our data structures
+interface ExportOptions {
+  includeCharacterProfiles: boolean;
+  includeWorldGuide: boolean;
+  addTableOfContents: boolean;
+  addNarration: boolean;
+  [key: string]: any; // For any additional options
+}
+
+interface Character {
+  name: string;
+  role: string;
+  description: string;
+  background: string;
+  personality: string;
+  imageUrl?: string;
+}
+
+interface Location {
+  name: string;
+  description: string;
+  climate?: string;
+  culture?: string;
+}
+
+interface WorldData {
+  name: string;
+  description: string;
+  history: string;
+  magicSystem?: string;
+  technology?: string;
+  locations: Location[];
+}
+
+interface ContentParams {
+  title: string;
+  description: string;
+  content: string;
+  characters: Character[];
+  worldData: WorldData | null;
+  options: ExportOptions;
+}
+
 async function generatePDFContent({
   title,
   description,
@@ -161,7 +199,7 @@ async function generatePDFContent({
   characters,
   worldData,
   options,
-}) {
+}: ContentParams) {
   // TODO: Implement PDF generation using a library like pdf-lib
   // For now, return a simple PDF structure
   return `%PDF-1.7
@@ -214,7 +252,7 @@ async function generateEPUBContent({
   characters,
   worldData,
   options,
-}) {
+}: ContentParams) {
   // TODO: Implement EPUB generation using a library like epub-gen
   // For now, return a simple EPUB structure
   return `PK\x03\x04\x14\x00\x00\x00\x00\x00...`; // Basic EPUB file structure
@@ -227,7 +265,7 @@ async function generateWebContent({
   characters,
   worldData,
   options,
-}) {
+}: ContentParams) {
   // Generate an interactive web page with the story content
   return `
     <!DOCTYPE html>
@@ -294,7 +332,7 @@ function generateTableOfContents() {
   `;
 }
 
-function generateCharacterProfiles(characters) {
+function generateCharacterProfiles(characters: Character[]) {
   return `
     <section id="characters">
       <h2>Characters</h2>
@@ -312,7 +350,7 @@ function generateCharacterProfiles(characters) {
   `;
 }
 
-function generateWorldGuide(worldData) {
+function generateWorldGuide(worldData: WorldData | null) {
   if (!worldData) return '';
   
   return `

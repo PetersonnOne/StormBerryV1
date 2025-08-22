@@ -1,6 +1,5 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { 
@@ -14,7 +13,6 @@ import {
 import { 
   Bell, 
   Settings, 
-  LogOut, 
   User, 
   Moon, 
   Sun,
@@ -26,13 +24,8 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 
 export function DashboardHeader() {
-  const { data: session } = useSession()
   const { theme, setTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState('')
-
-  const handleSignOut = () => {
-    signOut({ callbackUrl: '/' })
-  }
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -75,27 +68,21 @@ export function DashboardHeader() {
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
           </Button>
 
-          {/* User Menu */}
+          {/* User Menu (Guest) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
-                  <AvatarFallback>
-                    {session?.user?.name?.charAt(0) || 'U'}
-                  </AvatarFallback>
+                  <AvatarImage src="" alt="Guest" />
+                  <AvatarFallback>G</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {session?.user?.name}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {session?.user?.email}
-                  </p>
+                  <p className="text-sm font-medium leading-none">Guest</p>
+                  <p className="text-xs leading-none text-muted-foreground">No account</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -107,15 +94,10 @@ export function DashboardHeader() {
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
     </header>
   )
-} 
+}

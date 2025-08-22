@@ -15,17 +15,35 @@ import {
   Users, 
   ArrowRight,
   Star,
-  CheckCircle
+  CheckCircle,
+  X
 } from 'lucide-react'
 
 export default function HomePage() {
   const [showPopup, setShowPopup] = useState(false)
+  const [showBetaModal, setShowBetaModal] = useState(false)
 
   const handleComingSoonClick = (e: React.MouseEvent) => {
     e.preventDefault()
     setShowPopup(true)
     setTimeout(() => setShowPopup(false), 3000)
   }
+
+  const handleBetaAccess = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setShowBetaModal(true)
+  }
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (showBetaModal) {
+      timer = setTimeout(() => {
+        setShowBetaModal(false)
+        window.location.href = '/dashboard'
+      }, 5000)
+    }
+    return () => clearTimeout(timer)
+  }, [showBetaModal])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -42,23 +60,13 @@ export default function HomePage() {
             <Link href="/features" className="text-sm font-medium hover:text-primary transition-colors">
               Features
             </Link>
-
-            <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors">
-              About
-            </Link>
-            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors">
-              Contact
-            </Link>
-
-            <a href="/auth/signin" className="text-sm font-medium hover:text-primary transition-colors cursor-pointer">
+            <a onClick={handleBetaAccess} className="text-sm font-medium hover:text-primary transition-colors cursor-pointer">
               Sign In
             </a>
-            <Link href="/auth/signup" passHref legacyBehavior>
-              <Button>
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <Button onClick={handleBetaAccess}>
+              Get Started
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </nav>
         </div>
       </header>
@@ -110,6 +118,23 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Beta Phase Modal */}
+      {showBetaModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative dark:bg-gray-800">
+            <button
+              onClick={() => setShowBetaModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="text-center text-gray-800 dark:text-gray-200 mt-4">
+              Storm Berry Tools is in Beta Phase, so you get limited free AI trials everyday
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Features Section */}
       <section id="features" className="container px-4 py-24 mx-auto">
@@ -317,47 +342,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t bg-background">
         <div className="container px-4 py-12 mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-                  <Brain className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold">Storm Berry</span>
-              </div>
-              <p className="text-muted-foreground">
-                Your intelligent time management and productivity platform.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/features" className="hover:text-foreground">Features</Link></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Pricing</a></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">API</a></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Documentation</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-foreground">About</Link></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Blog</a></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Careers</a></li>
-                <li><Link href="/contact" className="hover:text-foreground">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Help Center</a></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Status</a></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Privacy</a></li>
-                <li><a href="#" onClick={handleComingSoonClick} className="hover:text-foreground cursor-pointer">Terms</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+          <div className="text-center text-sm text-muted-foreground">
             <p>&copy; 2025 Storm Berry. All rights reserved.</p>
           </div>
         </div>
@@ -373,6 +358,19 @@ export default function HomePage() {
                 Coming Sep 1 2025
               </p>
             </div>
+          </div>
+        </div>
+      )}
+      {showBetaModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 relative">
+            <button 
+              onClick={() => setShowBetaModal(false)} 
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              ×
+            </button>
+            <p className="text-center text-lg font-medium">Storm Berry Tools is in Beta Phase, so you get limited free AI trials everyday</p>
           </div>
         </div>
       )}

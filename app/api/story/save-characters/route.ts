@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession } from 'next-auth/react';
-import { put } from '@vercel/blob';
+import { put, get } from '@vercel/blob';
 
 export async function POST(req: Request) {
   try {
@@ -31,18 +31,18 @@ export async function POST(req: Request) {
     // Save character metadata for easier querying
     const metadataFilename = `characters/${session.user.id}/metadata.json`;
     const existingMetadataBlob = await get(metadataFilename);
-    let existingMetadata = [];
+    let existingMetadata: any[] = [];
     
     if (existingMetadataBlob) {
       existingMetadata = JSON.parse(await existingMetadataBlob.text());
     }
 
     const updatedMetadata = [
-      ...existingMetadata.filter(m => m.filename !== filename),
+      ...existingMetadata.filter((m: { filename: string }) => m.filename !== filename),
       {
         filename,
         characterCount: characters.length,
-        characterNames: characters.map(c => c.name).filter(Boolean),
+        characterNames: characters.map((c: { name: string }) => c.name).filter(Boolean),
         lastModified: timestamp,
       }
     ];
