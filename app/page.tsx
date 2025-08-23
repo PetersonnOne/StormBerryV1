@@ -76,20 +76,18 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           <Badge variant="secondary" className="mb-4">
             <Zap className="mr-2 h-3 w-3" />
-            Smart Time Management
+            Robust and Intuitive
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-            Master Your Time,{' '}
+            AI-Powered Tools to{' '}
             <span className="gradient-text">Maximize Productivity</span>
             <br />
-            Get Things Done at the Storm Berry
+            With Storm Berry Tools
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Transform your productivity with intelligent scheduling, task management, and time tracking tools. 
-            Optimize your workflow and achieve more in less time. Built for professionals, teams, and 
-            anyone who values efficient time management.
+            Transform your productivity with intelligent tools. Built for professionals, teams, and anyone who values efficient time management.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={handleComingSoonClick}>
               See Full Info
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -99,7 +97,7 @@ export default function HomePage() {
                 Watch Demo
               </Link>
             </Button>
-          </div>
+          </div> */}
           
           {/* Social Proof */}
           <div className="mt-12 flex items-center justify-center space-x-8 text-sm text-muted-foreground">
@@ -136,187 +134,20 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Features Section */}
-      <section id="features" className="container px-4 py-24 mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Time Management Made Simple
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Powerful features designed to optimize your time, boost productivity, and help you achieve your goals
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="group hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mb-4">
-                <MessageSquare className="h-6 w-6 text-blue-600" />
-              </div>
-              <CardTitle>Smart Scheduling</CardTitle>
-              <CardDescription>
-                Intelligent calendar management that optimizes your schedule and prevents conflicts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Automatic conflict detection</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Optimal time slot suggestions</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Meeting coordination</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
-                <Code className="h-6 w-6 text-green-600" />
-              </div>
-              <CardTitle>Task Management</CardTitle>
-              <CardDescription>
-                Organize, prioritize, and track your tasks with intelligent automation and reminders
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Priority-based organization</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Automated reminders</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Progress tracking</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mb-4">
-                <Image className="h-6 w-6 text-purple-600" />
-              </div>
-              <CardTitle>Time Tracking</CardTitle>
-              <CardDescription>
-                Monitor how you spend your time with detailed analytics and productivity insights
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Automatic time logging</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Productivity analytics</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Custom reporting</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mb-4">
-                <Brain className="h-6 w-6 text-orange-600" />
-              </div>
-              <CardTitle>Goal Setting</CardTitle>
-              <CardDescription>
-                Set, track, and achieve your goals with intelligent milestone planning and progress monitoring
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>SMART goal framework</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Milestone tracking</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Progress visualization</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-red-600" />
-              </div>
-              <CardTitle>Team Collaboration</CardTitle>
-              <CardDescription>
-                Coordinate team schedules, share calendars, and collaborate on projects efficiently
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Shared calendars</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Project coordination</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Team availability</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/20 flex items-center justify-center mb-4">
-                <Zap className="h-6 w-6 text-indigo-600" />
-              </div>
-              <CardTitle>Smart Notifications</CardTitle>
-              <CardDescription>
-                Stay on track with intelligent reminders and notifications that adapt to your workflow
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Context-aware alerts</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Priority-based notifications</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Cross-platform sync</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+      <section className="container mx-auto px-4 py-2 text-center">
+        <iframe 
+            width="1280" 
+            height="720" 
+            src="https://www.youtube.com/embed/QZS0m20ZYLU" 
+            title="YouTube video player" 
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+            className="mx-auto"
+        ></iframe>
       </section>
+
+
 
       {/* CTA Section */}
       <section className="container px-4 py-24 mx-auto">
@@ -328,12 +159,12 @@ export default function HomePage() {
             Join thousands of professionals who are already using Storm Berry to optimize their schedules and achieve more
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleComingSoonClick}>
-              See Full Info
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleBetaAccess}>
+              Sign In
             </Button>
-            <Button size="lg" variant="outline" className="border-2 border-white text-black bg-white hover:bg-gray-100 hover:border-gray-200 transition-all duration-200" onClick={handleComingSoonClick}>
-              Contact Sales
+            <Button size="lg" variant="outline" className="border-2 border-white text-black bg-white hover:bg-gray-100 hover:border-gray-200 transition-all duration-200" onClick={handleBetaAccess}>
+              Get Started
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>

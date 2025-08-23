@@ -152,7 +152,7 @@ export async function emailTasksExport(
       attachment = Buffer.from(exportToCSV(tasks));
       filename = 'tasks.csv';
       break;
-    case 'docx':
+        case 'docx':
       attachment = await exportToDOCX(tasks);
       filename = 'tasks.docx';
       break;
