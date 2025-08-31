@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import { MicrophoneIcon, StopIcon } from '@heroicons/react/24/solid';
+import { Mic, Square } from 'lucide-react';
 
 interface VoiceInputProps {
   setLoading: (loading: boolean) => void;
@@ -93,9 +93,9 @@ export default function VoiceInput({ setLoading }: VoiceInputProps) {
           className="rounded-full w-16 h-16 p-4"
         >
           {isRecording ? (
-            <StopIcon className="w-8 h-8" />
+            <Square className="w-8 h-8" />
           ) : (
-            <MicrophoneIcon className="w-8 h-8" />
+            <Mic className="w-8 h-8" />
           )}
         </Button>
       </div>

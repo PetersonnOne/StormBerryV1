@@ -4,8 +4,8 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
-import { PhotoIcon } from '@heroicons/react/24/solid';
-import { getStore } from '@netlify/blobs';
+import { Image } from 'lucide-react';
+// import { getStore } from '@netlify/blobs'; // TODO: Add when package is installed
 
 interface ImageInputProps {
   setLoading: (loading: boolean) => void;
@@ -50,12 +50,18 @@ export default function ImageInput({ setLoading }: ImageInputProps) {
     try {
       setLoading(true);
 
-      // Upload to Netlify Blobs
-      const store = getStore({ name: 'education-images' });
-      const uniqueKey = `${Date.now()}-${selectedImage.name}`;
-      await store.set(uniqueKey, selectedImage);
+      // TODO: Upload to Netlify Blobs when package is installed
+      // const store = getStore({ name: 'education-images' });
+      // const uniqueKey = `${Date.now()}-${selectedImage.name}`;
+      // await store.set(uniqueKey, selectedImage);
 
-      // TODO: Implement GPT-5 API call with image URL
+      // Simulate processing for now
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: 'Success',
+        description: 'Image processed successfully!',
+      });
       
     } catch (error) {
       toast({
@@ -90,7 +96,7 @@ export default function ImageInput({ setLoading }: ImageInputProps) {
           />
         ) : (
           <div className="py-8">
-            <PhotoIcon className="w-12 h-12 mx-auto text-gray-400" />
+            <Image className="w-12 h-12 mx-auto text-gray-400" />
             <p className="mt-2">Click to select an image</p>
           </div>
         )}

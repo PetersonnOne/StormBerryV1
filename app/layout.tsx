@@ -1,12 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from 'react-hot-toast'
 // Analytics temporarily disabled for deployment
 // import { Analytics } from '@/components/analytics'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Storm Berry - Time Management & Productivity Platform',
@@ -77,7 +74,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#3b82f6" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         {/* Removed ClerkProvider to disable authentication globally */}
         <Providers>
           {children}

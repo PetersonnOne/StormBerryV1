@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+// import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+// import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { getStore } from '@netlify/blobs';
+// import { getStore } from '@netlify/blobs'; // TODO: Add when package is installed
 
 interface Question {
   id: string;
@@ -136,21 +136,21 @@ export default function QuizSection() {
       <Card className="p-6">
         <p className="text-lg mb-4">{currentQuestion.text}</p>
 
-        <RadioGroup
-          onValueChange={handleAnswer}
-          value={selectedAnswer?.toString()}
-          disabled={quizState.showExplanation}
-        >
+        <div className="space-y-2">
           {currentQuestion.options.map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <RadioGroupItem
-                value={index.toString()}
-                id={`option-${index}`}
-              />
-              <Label htmlFor={`option-${index}`}>{option}</Label>
-            </div>
+            <button
+              key={index}
+              onClick={() => handleAnswer(index.toString())}
+              className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                quizState.answers[currentQuestion.id] === index
+                  ? 'bg-blue-100 border-blue-500'
+                  : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+              }`}
+            >
+              {option}
+            </button>
           ))}
-        </RadioGroup>
+        </div>
 
         {quizState.showExplanation && (
           <div className={`mt-4 p-4 rounded-md ${isCorrect ? 'bg-green-50' : 'bg-red-50'}`}>

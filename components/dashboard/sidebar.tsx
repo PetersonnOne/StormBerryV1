@@ -14,8 +14,9 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: Settings },
   { name: 'Education', href: '/education', icon: BookOpen },
-  { name: 'Business / Productivity', href: '/timekeeper', icon: Briefcase },
+  { name: 'Business / Productivity', href: '/business', icon: Briefcase },
   { name: 'Creativity', href: '/story', icon: Sparkles },
   { name: 'Accessibility', href: '/accessibility', icon: Accessibility },
 ]
@@ -50,6 +51,7 @@ export function DashboardSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={true}
                 className={cn(
                   'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
                   isActive

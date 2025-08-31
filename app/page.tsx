@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
+import Carousel from '@/components/carousel'
 import { 
   MessageSquare, 
   Code, 
@@ -71,48 +72,23 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="container px-4 py-24 mx-auto text-center">
-        <div className="max-w-4xl mx-auto">
-          <Badge variant="secondary" className="mb-4">
-            <Zap className="mr-2 h-3 w-3" />
-            Robust and Intuitive
-          </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-            AI-Powered Tools to{' '}
-            <span className="gradient-text">Maximize Productivity</span>
-            <br />
-            With Storm Berry Tools
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Transform your productivity with intelligent tools. Built for professionals, teams, and anyone who values efficient time management.
-          </p>
-          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={handleComingSoonClick}>
-              See Full Info
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="lg" className="border-2 border-primary hover:border-primary/80 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200" asChild>
-              <Link href="#demo">
-                Watch Demo
-              </Link>
-            </Button>
-          </div> */}
-          
-          {/* Social Proof */}
-          <div className="mt-12 flex items-center justify-center space-x-8 text-sm text-muted-foreground">
-            <div className="flex items-center space-x-2">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <span>4.9/5 from 10k+ users</span>
+      {/* Carousel Hero Section */}
+      <Carousel />
+
+      {/* Social Proof Section */}
+      <section className="container px-4 py-12 mx-auto">
+        <div className="flex items-center justify-center space-x-8 text-sm text-muted-foreground">
+          <div className="flex items-center space-x-2">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              ))}
             </div>
-            <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>2M+ hours saved</span>
-            </div>
+            <span>4.9/5 from 10k+ users</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Users className="h-4 w-4" />
+            <span>2M+ hours saved</span>
           </div>
         </div>
       </section>
@@ -133,6 +109,67 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Features Section */}
+      <section className="container px-4 py-16 mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold">Your AI-Powered Modules</h2>
+          <p className="text-lg text-muted-foreground mt-2">Explore the tools that will redefine your workflow.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Education Card */}
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center mb-4">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Education</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>Personalized learning paths and AI-driven insights to accelerate your knowledge.</CardDescription>
+            </CardContent>
+          </Card>
+
+          {/* Business & Productivity Card */}
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center mb-4">
+                <Zap className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Business & Productivity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>Streamline your tasks, manage projects, and boost your team's efficiency.</CardDescription>
+            </CardContent>
+          </Card>
+
+          {/* Creativity Card */}
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4">
+                <Image className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Creativity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>Unleash your creative potential with AI-powered content generation and brainstorming tools.</CardDescription>
+            </CardContent>
+          </Card>
+
+          {/* Accessibility Card */}
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Accessibility</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>Tools designed to make digital content more accessible for everyone.</CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       <section className="container mx-auto px-4 py-2 text-center">
         <iframe 

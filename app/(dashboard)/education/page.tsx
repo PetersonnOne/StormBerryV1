@@ -1,36 +1,22 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import dynamic from 'next/dynamic';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import TextInput from '@/components/education/text-input';
+import VoiceInput from '@/components/education/voice-input';
+import ImageInput from '@/components/education/image-input';
+import LessonView from '@/components/education/lesson-view';
+import QuizSection from '@/components/education/quiz-section';
 import { Toaster } from '@/components/ui/toaster';
-
-// Dynamic imports for better code splitting
-const TextInput = dynamic(() => import('@/components/education/text-input'), {
-  loading: () => <LoadingSpinner />
-});
-const VoiceInput = dynamic(() => import('@/components/education/voice-input'), {
-  loading: () => <LoadingSpinner />
-});
-const ImageInput = dynamic(() => import('@/components/education/image-input'), {
-  loading: () => <LoadingSpinner />
-});
-const LessonView = dynamic(() => import('@/components/education/lesson-view'), {
-  loading: () => <LoadingSpinner />
-});
-const QuizSection = dynamic(() => import('@/components/education/quiz-section'), {
-  loading: () => <LoadingSpinner />
-});
 
 export default function EducationModule() {
   const [activeTab, setActiveTab] = useState('text');
   const [loading, setLoading] = useState(false);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="p-6">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-blue-600 rounded-2xl p-8 text-white mb-8">
         <h1 className="text-4xl font-bold mb-4">Education Module</h1>

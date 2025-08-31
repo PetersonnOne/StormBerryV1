@@ -1,24 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { useTheme } from 'next-themes';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-
-// Dynamic imports for better performance
-const TranscriptionPanel = dynamic(() => import('@/components/accessibility/transcription-panel'), {
-  loading: () => <LoadingSpinner />
-});
-const SignLanguagePanel = dynamic(() => import('@/components/accessibility/sign-language-panel'), {
-  loading: () => <LoadingSpinner />
-});
-const SettingsPanel = dynamic(() => import('@/components/accessibility/settings-panel'), {
-  loading: () => <LoadingSpinner />
-});
-const ConversationHistory = dynamic(() => import('@/components/accessibility/conversation-history'), {
-  loading: () => <LoadingSpinner />
-});
+import TranscriptionPanel from '@/components/accessibility/transcription-panel';
+import SignLanguagePanel from '@/components/accessibility/sign-language-panel';
+import SettingsPanel from '@/components/accessibility/settings-panel';
+import ConversationHistory from '@/components/accessibility/conversation-history';
 
 type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 type Contrast = 'normal' | 'high';
@@ -57,10 +45,10 @@ export default function AccessibilityPage() {
   };
 
   return (
-    <>
-      {/* Header Banner with Swapped Gradients */}
-      <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-blue-600 rounded-2xl mx-6 mt-6 p-8 text-white">
-        <h1 className="text-4xl font-bold mb-4">Welcome to the Accessibility Module!</h1>
+    <div className={`p-6 ${fontSizeClasses[fontSize]} ${contrastClasses[contrast]}`}>
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-blue-600 rounded-2xl p-8 text-white mb-8">
+        <h1 className="text-4xl font-bold mb-4">Accessibility Module</h1>
         <p className="text-xl mb-6 opacity-90">
           Experience a more inclusive digital world with our AI-powered accessibility tools.
         </p>
@@ -75,7 +63,6 @@ export default function AccessibilityPage() {
           </div>
         </div>
       </div>
-      <div className={`min-h-screen p-4 ${fontSizeClasses[fontSize]} ${contrastClasses[contrast]}`}>
 
       <header className="mb-8">
         <h1 className="text-4xl font-bold mb-2">AI Accessibility Companion</h1>
@@ -125,6 +112,5 @@ export default function AccessibilityPage() {
         </TabsContent>
       </Tabs>
     </div>
-    </>
   );
 }
