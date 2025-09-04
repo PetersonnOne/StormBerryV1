@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { getStore } from '@netlify/blobs';
 
 type SummaryResult = {
   summary: string;
@@ -33,16 +32,25 @@ export default function TranscriptSummarizer() {
     try {
       setProcessing(true);
 
-      // Store transcript in Netlify Blobs
-      const store = getStore({ name: 'TranscriptSummaries' });
-      const key = `transcript-${Date.now()}`;
-      await store.set(key, transcript);
+      // First save transcript, then summarize
+      const saveResponse = await fetch('/api/education', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'text',
+          content: transcript,
+        }),
+      });
 
-      // Send for GPT-5 analysis
+      if (!saveResponse.ok) throw new Error('Failed to save transcript');
+      
+      const { id: transcriptId } = await saveResponse.json();
+
+      // Send for AI analysis
       const response = await fetch('/api/workflow/summarize-transcript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key }),
+        body: JSON.stringify({ transcriptId }),
       });
 
       if (!response.ok) throw new Error('Summarization failed');

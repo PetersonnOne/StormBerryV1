@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import ModelSelector from '@/components/ui/model-selector'
 import { 
   Send, 
   Bot, 
@@ -69,6 +70,7 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>(mockMessages)
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('gpt-4')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -94,49 +96,46 @@ export function ChatInterface() {
     setInputValue('')
     setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage.content,
+          model: selectedModel,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to get AI response')
+      }
+
+      const data = await response.json()
+      
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: data.messageId || (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I understand you're asking about "${userMessage.content}". Let me help you with that.
-
-Here's a detailed response with some code examples:
-
-\`\`\`jsx
-import React, { useState, useEffect } from 'react'
-
-function ExampleComponent({ title, onAction }) {
-  const [count, setCount] = useState(0)
-  
-  useEffect(() => {
-    console.log('Component mounted')
-  }, [])
-  
-  return (
-    <div className="p-4 border rounded-lg">
-      <h2>{title}</h2>
-      <p>Count: {count}</p>
-      <button onClick={() => setCount(count + 1)}>
-        Increment
-      </button>
-    </div>
-  )
-}
-\`\`\`
-
-This component demonstrates:
-- State management with useState
-- Side effects with useEffect
-- Props handling
-- Event handling
-
-Would you like me to explain any specific part in more detail?`,
+        content: data.content,
         timestamp: new Date()
       }
+      
       setMessages(prev => [...prev, aiMessage])
+    } catch (error) {
+      console.error('Chat error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to get AI response')
+      
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 2000)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -183,7 +182,10 @@ Would you like me to explain any specific part in more detail?`,
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">GPT-4</Badge>
+          <ModelSelector
+            value={selectedModel}
+            onValueChange={setSelectedModel}
+          />
           <Button variant="ghost" size="sm">
             <Settings className="h-4 w-4" />
           </Button>

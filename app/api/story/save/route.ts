@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { put } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -14,52 +14,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
 
-    // Generate a unique filename for the story content
-    const timestamp = new Date().toISOString();
-    const filename = `stories/${session.user.id}/${metadata.title || 'untitled'}-${timestamp}.html`;
+    const token = await getToken({ template: 'supabase' });
 
-    // Save story content to Netlify Blobs
-    const blob = await put(filename, content, {
-      access: 'private',
-      contentType: 'text/html',
-      metadata: {
-        userId: session.user.id,
-        title: metadata.title,
-        genre: metadata.genre,
-        synopsis: metadata.synopsis,
-        lastModified: timestamp,
-      },
-    });
+    // Create story content with metadata as JSON
+    const storyData = {
+      content: JSON.stringify({
+        html: content,
+        metadata: {
+          title: metadata.title,
+          genre: metadata.genre,
+          synopsis: metadata.synopsis,
+          type: 'story',
+          lastModified: new Date().toISOString(),
+        }
+      })
+    };
 
-    // Save metadata separately for easier querying
-    const metadataFilename = `stories/${session.user.id}/metadata.json`;
-    const existingMetadataBlob = await get(metadataFilename);
-    let existingMetadata = [];
-    
-    if (existingMetadataBlob) {
-      existingMetadata = JSON.parse(await existingMetadataBlob.text());
-    }
-
-    const updatedMetadata = [
-      ...existingMetadata.filter(m => m.filename !== filename),
-      {
-        filename,
-        title: metadata.title,
-        genre: metadata.genre,
-        synopsis: metadata.synopsis,
-        lastModified: timestamp,
-      }
-    ];
-
-    await put(metadataFilename, JSON.stringify(updatedMetadata), {
-      access: 'private',
-      contentType: 'application/json',
-    });
+    const result = await textsService.create(userId, storyData, token || undefined);
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
-      filename,
+      id: result.id,
+      created_at: result.created_at,
     });
 
   } catch (error) {

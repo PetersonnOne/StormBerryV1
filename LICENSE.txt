@@ -1,0 +1,14 @@
+Copyright (c) 2025 Joseph Petersonn
+
+All rights reserved.
+
+This code is submitted exclusively to/for the 2025 Hackathon Organizers of which I participate in their Hackathons.  
+Use, distribution, or modification by any other party is strictly prohibited  
+without written permission from the author.
+
+Hackathon organizers of which I participate in their Hackathons, are granted a non-exclusive, non-transferable, license to view, evaluate, and showcase this project for purposes related to their respective Hackathons.
+They also permited to use the code for their personal or commercial projects.
+
+However, the project name, "Storm Berry" or "Storm Berry Tools" or "Storm Berry Office" is a Copyright Brand of Joseph Petersonn, so it is not to be used by the Hackathon organizers in any type of project.
+
+Contact: petersonnsdev@gmail.com

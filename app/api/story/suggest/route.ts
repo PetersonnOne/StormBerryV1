@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { Configuration, OpenAIApi } from 'openai';
+import { auth } from '@clerk/nextjs/server';
+import OpenAI from 'openai';
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -22,8 +21,8 @@ export async function POST(req: Request) {
     // Strip HTML tags for cleaner GPT input
     const cleanContent = content.replace(/<[^>]*>/g, '');
 
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-5-turbo',
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
       messages: [
         {
           role: 'system',
@@ -43,7 +42,7 @@ Analyze the story content and provide suggestions for plot development, characte
       max_tokens: 500,
     });
 
-    const suggestions = completion.data.choices[0]?.message?.content || '';
+    const suggestions = completion.choices[0]?.message?.content || '';
 
     return NextResponse.json({
       success: true,

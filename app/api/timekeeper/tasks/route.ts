@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { auth } from '@clerk/nextjs/server';
 import { Redis } from '@upstash/redis';
 import { prisma } from '@/lib/prisma';
-import { authOptions } from '@/lib/auth';
 import { Task, NotificationType } from '@prisma/client';
 
 const redis = new Redis({
@@ -14,13 +13,13 @@ const CACHE_TTL = 60 * 5; // 5 minutes
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Try to get tasks from cache
-    const cacheKey = `tasks:${session.user.id}`;
+    const cacheKey = `tasks:${userId}`;
     const cachedTasks = await redis.get<Task[]>(cacheKey);
 
     if (cachedTasks) {
@@ -29,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // If not in cache, fetch from database
     const tasks = await prisma.task.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       include: { reminders: true },
       orderBy: { originDatetime: 'asc' },
     });
@@ -49,8 +48,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
     const task = await prisma.task.create({
       data: {
         ...data,
-        userId: session.user.id,
+        userId,
       },
     });
 
@@ -86,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Invalidate cache
-    await redis.del(`tasks:${session.user.id}`);
+    await redis.del(`tasks:${userId}`);
 
     return NextResponse.json(task);
   } catch (error) {
@@ -100,8 +99,8 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -114,7 +113,7 @@ export async function PUT(request: NextRequest) {
       include: { reminders: true },
     });
 
-    if (!existingTask || existingTask.userId !== session.user.id) {
+    if (!existingTask || existingTask.userId !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
@@ -164,7 +163,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Invalidate cache
-    await redis.del(`tasks:${session.user.id}`);
+    await redis.del(`tasks:${userId}`);
 
     return NextResponse.json(task);
   } catch (error) {
@@ -178,8 +177,8 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -195,7 +194,7 @@ export async function DELETE(request: NextRequest) {
       where: { id: taskId },
     });
 
-    if (!task || task.userId !== session.user.id) {
+    if (!task || task.userId !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
@@ -205,7 +204,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     // Invalidate cache
-    await redis.del(`tasks:${session.user.id}`);
+    await redis.del(`tasks:${userId}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

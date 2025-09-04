@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Editor } from '@tiptap/react';
+import { Editor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEditor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import ModelSelector from '@/components/ui/model-selector';
 
 export function StoryEditor() {
   const [suggestions, setSuggestions] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
   const [storyMetadata, setStoryMetadata] = useState({
     title: '',
     genre: '',
@@ -21,6 +23,7 @@ export function StoryEditor() {
   const editor = useEditor({
     extensions: [StarterKit],
     content: '',
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
@@ -55,20 +58,31 @@ export function StoryEditor() {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/story/suggest', {
+      const response = await fetch('/api/story/generate-story', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: editor.getHTML(),
-          metadata: storyMetadata,
+          prompt: `Continue this story: ${editor.getText()}`,
+          genre: storyMetadata.genre || 'general',
+          length: 'short',
+          style: 'narrative',
+          characters: [],
+          setting: '',
+          tone: 'neutral',
+          model: selectedModel,
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate suggestions');
+      }
+
       const data = await response.json();
-      setSuggestions(data.suggestions);
+      setSuggestions(data.story);
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      toast.error('Failed to generate suggestions');
+      toast.error(error instanceof Error ? error.message : 'Failed to generate suggestions');
     } finally {
       setIsGenerating(false);
     }
@@ -111,30 +125,39 @@ export function StoryEditor() {
               onChange={(e) => setStoryMetadata(prev => ({ ...prev, synopsis: e.target.value }))}
               rows={3}
             />
+            <div className="flex items-center gap-2 pt-2">
+              <span className="text-sm font-medium">AI Model:</span>
+              <ModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+              />
+            </div>
           </div>
           <EditorContent editor={editor} className="min-h-[500px] border rounded p-4" />
         </Card>
 
-        <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => saveContent(editor.getHTML())}
-          >
-            Save Draft
-          </Button>
-          <Button
-            onClick={generateSuggestions}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              'Get AI Suggestions'
-            )}
-          </Button>
+        <div className="flex justify-end">
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => saveContent(editor.getHTML())}
+            >
+              Save Draft
+            </Button>
+            <Button
+              onClick={generateSuggestions}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Get AI Suggestions'
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { auth } from '@clerk/nextjs/server';
 import { Redis } from '@upstash/redis';
 import { Resend } from 'resend';
 import twilio from 'twilio';
 import { prisma } from '@/lib/prisma';
-import { authOptions } from '@/lib/auth';
 import { NotificationType } from '@prisma/client';
 
 const redis = new Redis({
@@ -21,8 +20,8 @@ const twilioClient = twilio(
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -36,7 +35,7 @@ export async function GET(request: NextRequest) {
     const reminders = await prisma.reminder.findMany({
       where: {
         taskId,
-        task: { userId: session.user.id },
+        task: { userId },
       },
       include: { task: true },
     });
@@ -53,8 +52,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -66,7 +65,7 @@ export async function POST(request: NextRequest) {
       where: { id: taskId },
     });
 
-    if (!task || task.userId !== session.user.id) {
+    if (!task || task.userId !== userId) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
@@ -103,8 +102,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -121,7 +120,7 @@ export async function DELETE(request: NextRequest) {
       include: { task: true },
     });
 
-    if (!reminder || reminder.task.userId !== session.user.id) {
+    if (!reminder || reminder.task.userId !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 

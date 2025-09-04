@@ -1,16 +1,27 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function POST(request: Request) {
   try {
-    const { key } = await request.json();
+    const { userId, getToken } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { transcriptId } = await request.json();
     
-    // Get transcript from Netlify Blobs
-    const store = getStore({ name: 'TranscriptSummaries' });
-    const transcript = await store.get(key);
+    if (!transcriptId) {
+      return NextResponse.json(
+        { error: 'Transcript ID required' },
+        { status: 400 }
+      );
+    }
+
+    const token = await getToken({ template: 'supabase' });
+
+    // Get transcript from Supabase
+    const transcript = await textsService.getById(transcriptId, userId, token || undefined);
     
     if (!transcript) {
       return NextResponse.json(
@@ -19,7 +30,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Process with GPT-5 (placeholder implementation)
+    // Process with AI (placeholder implementation)
     const summaryResult = {
       summary: 'Meeting focused on Q1 goals and project timelines.',
       keyPoints: [
@@ -40,10 +51,24 @@ export async function POST(request: Request) {
       ]
     };
 
-    // Store the summary result
-    await store.set(`${key}-summary`, JSON.stringify(summaryResult));
+    // Store the summary result in Supabase
+    const summaryData = {
+      content: JSON.stringify({
+        summaryResult,
+        metadata: {
+          type: 'transcript-summary',
+          originalTranscriptId: transcriptId,
+          summarizedAt: new Date().toISOString(),
+        }
+      })
+    };
 
-    return NextResponse.json(summaryResult);
+    const result = await textsService.create(userId, summaryData, token || undefined);
+
+    return NextResponse.json({
+      ...summaryResult,
+      id: result.id
+    });
   } catch (error) {
     console.error('Transcript summarization error:', error);
     return NextResponse.json(

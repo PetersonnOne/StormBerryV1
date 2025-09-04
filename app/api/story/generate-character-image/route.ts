@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { put } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { uploadImage } from '@/utils/storage';
+import { imagesService } from '@/lib/db/images';
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -36,30 +37,28 @@ export async function POST(req: Request) {
     }
 
     const data = await response.json();
-    const imageUrl = data.output[0]; // The generated image URL
+    const imageUrl = data.output[0];
 
     // Download the generated image
     const imageResponse = await fetch(imageUrl);
-    const imageBuffer = await imageResponse.arrayBuffer();
+    const imageBlob = await imageResponse.blob();
+    const file = new File([imageBlob], `character-${characterId}.png`, { type: 'image/png' });
 
-    // Save the image to Netlify Blobs
-    const timestamp = new Date().toISOString();
-    const filename = `characters/${session.user.id}/images/${characterId}-${timestamp}.png`;
+    const token = await getToken({ template: 'supabase' });
 
-    const blob = await put(filename, imageBuffer, {
-      access: 'public',
-      contentType: 'image/png',
-      metadata: {
-        userId: session.user.id,
-        characterId,
-        prompt,
-        timestamp,
-      },
-    });
+    // Upload to Supabase Storage
+    const uploadedUrl = await uploadImage(file, userId, token || undefined);
+
+    // Save image metadata to database
+    const result = await imagesService.create(userId, {
+      url: uploadedUrl,
+      prompt: `Character: ${characterId} - ${prompt}`,
+    }, token || undefined);
 
     return NextResponse.json({
       success: true,
-      imageUrl: blob.url,
+      imageUrl: uploadedUrl,
+      id: result.id,
     });
 
   } catch (error) {

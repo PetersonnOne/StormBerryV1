@@ -1,0 +1,11 @@
+{
+  "name": "supabase",
+  "claims": {
+    "aud": "authenticated",
+    "role": "authenticated",
+    "sub": "{{user.id}}",
+    "email": "{{user.primary_email_address.email_address}}",
+    "exp": "{{date.now_plus_seconds(3600)}}"
+  },
+  "lifetime": 3600
+}

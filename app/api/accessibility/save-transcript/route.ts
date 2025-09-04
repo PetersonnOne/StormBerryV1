@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { put } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -18,37 +18,27 @@ export async function POST(req: Request) {
       );
     }
 
-    // Save transcript content
-    const filename = `transcripts/${session.user.id}/${timestamp}.txt`;
-    await put(filename, transcript, {
-      access: 'public',
-      contentType: 'text/plain',
-      metadata: {
-        userId: session.user.id,
-        language,
-        timestamp,
-      },
-    });
+    const token = await getToken({ template: 'supabase' });
 
-    // Update transcript metadata
-    const metadataFilename = `transcripts/${session.user.id}/metadata.json`;
-    const metadataBlob = await put(metadataFilename, JSON.stringify({
-      transcripts: [{
-        filename,
-        language,
-        timestamp,
-        summary: null, // Will be updated by the summarization endpoint
-      }],
-    }), {
-      access: 'public',
-      contentType: 'application/json',
-      addOnly: false,
-    });
+    // Save transcript as structured content
+    const transcriptData = {
+      content: JSON.stringify({
+        transcript,
+        metadata: {
+          language,
+          timestamp,
+          type: 'transcript',
+          summary: null,
+        }
+      })
+    };
+
+    const result = await textsService.create(userId, transcriptData, token || undefined);
 
     return NextResponse.json({
       success: true,
-      filename,
-      metadataUrl: metadataBlob.url,
+      id: result.id,
+      created_at: result.created_at,
     });
 
   } catch (error) {

@@ -10,6 +10,11 @@
 - **Module 3 — Creativity:** Collaborative Story & Media Creator
 - **Module 4 — Accessibility:** AI Companion for the Deaf & Hard of Hearing
 - 
+
+### Setup Supabase SQL Scripts
+Inside the Migrations project folder, you will find the Scripts to run in Supabase SQL Editor of your project, to setup the necessary database objects.
+For the Steps on how to implement the Supabase SQL Scripts refer to Supabase-Database-Table-Scripts.MD in the HowTo Folder of the Project
+
 ### User Experience
 - **Responsive Design**: Mobile-first design that works on all devices
 - **Dark/Light Theme**: Automatic theme switching with system preference detection
@@ -41,7 +46,7 @@
 ### Backend
 - **Next.js API Routes** - Serverless API endpoints
 - **Prisma** - Database ORM
-- **PostgreSQL** - Primary database
+- **PostgreSQL** - Primary database like Supabase
 - **NextAuth.js** - Authentication
 - **bcryptjs** - Password hashing
 - **Socket.io** - Real-time communication

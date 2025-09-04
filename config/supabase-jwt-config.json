@@ -1,0 +1,7 @@
+{
+  "jwks_uri": "https://clerk.dev/.well-known/jwks",
+  "audience": "authenticated",
+  "role_claim": "role",
+  "algorithm": "RS256",
+  "issuer": "https://clerk.dev"
+}

@@ -1,46 +1,48 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { get } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function GET(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const url = new URL(req.url);
-    const filename = url.searchParams.get('filename');
+    const transcriptId = url.searchParams.get('id');
 
-    if (!filename) {
+    if (!transcriptId) {
       return NextResponse.json(
-        { error: 'Missing filename parameter' },
+        { error: 'Missing transcript ID parameter' },
         { status: 400 }
       );
     }
 
-    // Verify that the requested transcript belongs to the user
-    if (!filename.startsWith(`transcripts/${session.user.id}/`)) {
-      return NextResponse.json(
-        { error: 'Unauthorized access to transcript' },
-        { status: 403 }
-      );
-    }
+    const token = await getToken({ template: 'supabase' });
 
-    // Get transcript content
-    const transcriptBlob = await get(filename);
-    if (!transcriptBlob) {
+    // Get specific transcript content
+    const transcript = await textsService.getById(transcriptId, userId, token || undefined);
+    if (!transcript) {
       return NextResponse.json(
         { error: 'Transcript not found' },
         { status: 404 }
       );
     }
 
-    const content = await transcriptBlob.text();
+    // Parse and verify it's a transcript
+    const content = JSON.parse(transcript.content);
+    if (content.metadata?.type !== 'transcript') {
+      return NextResponse.json(
+        { error: 'Invalid transcript data' },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      content,
+      content: content.transcript,
+      metadata: content.metadata,
     });
 
   } catch (error) {

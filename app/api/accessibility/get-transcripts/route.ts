@@ -1,34 +1,42 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { get } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function GET(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get transcript metadata
-    const metadataFilename = `transcripts/${session.user.id}/metadata.json`;
-    const metadataBlob = await get(metadataFilename);
-    
-    if (!metadataBlob) {
-      return NextResponse.json({
-        transcripts: [],
-      });
-    }
+    const token = await getToken({ template: 'supabase' });
 
-    const metadata = JSON.parse(await metadataBlob.text());
+    // Get all transcripts for the user
+    const transcripts = await textsService.getAll(userId, token || undefined);
 
-    // Sort transcripts by timestamp in descending order
-    metadata.transcripts.sort((a: any, b: any) => {
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    });
+    // Filter for transcript content and sort by creation date
+    const transcriptData = transcripts
+      .filter(text => {
+        try {
+          const content = JSON.parse(text.content);
+          return content.metadata?.type === 'transcript';
+        } catch {
+          return false;
+        }
+      })
+      .map(text => {
+        const content = JSON.parse(text.content);
+        return {
+          id: text.id,
+          timestamp: text.created_at,
+          ...content.metadata,
+        };
+      })
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     return NextResponse.json({
       success: true,
-      transcripts: metadata.transcripts,
+      transcripts: transcriptData,
     });
 
   } catch (error) {

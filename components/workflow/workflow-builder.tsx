@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import ModelSelector from '@/components/ui/model-selector';
 
 type WorkflowStep = {
   id: string;
@@ -21,6 +22,7 @@ type WorkflowTemplate = {
 export default function WorkflowBuilder() {
   const [workflows, setWorkflows] = useState<WorkflowTemplate[]>([]);
   const [currentWorkflow, setCurrentWorkflow] = useState<WorkflowTemplate | null>(null);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
   const { toast } = useToast();
 
   const stepTypes = [
@@ -51,6 +53,63 @@ export default function WorkflowBuilder() {
     }
   };
 
+  const generateWorkflow = async () => {
+    if (!currentWorkflow?.name) {
+      toast({
+        title: 'Error',
+        description: 'Please give your workflow a name',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/business/create-workflow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: currentWorkflow.name,
+          industry: 'general',
+          complexity: 'moderate',
+          steps: ['automation', 'ai'],
+          tools: ['automation', 'ai'],
+          model: selectedModel,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate workflow');
+      }
+
+      const data = await response.json();
+      
+      // Convert AI-generated workflow to our format
+      const generatedSteps = data.workflow.steps.map((step: any, index: number) => ({
+        id: `step-${index}-${Date.now()}`,
+        type: 'text-generation' as WorkflowStep['type'],
+        config: { title: step.title, description: step.description },
+      }));
+
+      setCurrentWorkflow({
+        ...currentWorkflow,
+        steps: generatedSteps,
+      });
+
+      toast({
+        title: 'Success',
+        description: 'AI workflow generated successfully',
+      });
+    } catch (error) {
+      console.error('Workflow generation error:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to generate workflow',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const saveWorkflow = async () => {
     if (!currentWorkflow?.name) {
       toast({
@@ -62,15 +121,6 @@ export default function WorkflowBuilder() {
     }
 
     try {
-      // Save workflow to Netlify Blobs
-      const response = await fetch('/api/workflow/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentWorkflow),
-      });
-
-      if (!response.ok) throw new Error('Failed to save workflow');
-
       setWorkflows([...workflows, currentWorkflow]);
       setCurrentWorkflow(null);
 
@@ -106,12 +156,22 @@ export default function WorkflowBuilder() {
 
       {currentWorkflow && (
         <div className="space-y-6">
-          <Input
-            placeholder="Workflow Name"
-            value={currentWorkflow.name}
-            onChange={(e) => setCurrentWorkflow({ ...currentWorkflow, name: e.target.value })}
-            className="max-w-md"
-          />
+          <div className="space-y-4">
+            <Input
+              placeholder="Workflow Name"
+              value={currentWorkflow.name}
+              onChange={(e) => setCurrentWorkflow({ ...currentWorkflow, name: e.target.value })}
+              className="max-w-md"
+            />
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">AI Model:</span>
+              <ModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+              />
+            </div>
+          </div>
 
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-3 gap-6">
@@ -175,7 +235,10 @@ export default function WorkflowBuilder() {
             </div>
           </DragDropContext>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button onClick={generateWorkflow} variant="outline">
+              Generate with AI
+            </Button>
             <Button onClick={saveWorkflow}>Save Workflow</Button>
           </div>
         </div>

@@ -7,12 +7,14 @@ import TranscriptionPanel from '@/components/accessibility/transcription-panel';
 import SignLanguagePanel from '@/components/accessibility/sign-language-panel';
 import SettingsPanel from '@/components/accessibility/settings-panel';
 import ConversationHistory from '@/components/accessibility/conversation-history';
+import { PageLoading } from '@/components/ui/page-loading';
 
 type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 type Contrast = 'normal' | 'high';
 
 export default function AccessibilityPage() {
   const [mounted, setMounted] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const { theme, setTheme } = useTheme();
   const [fontSize, setFontSize] = useState<FontSize>('medium');
   const [contrast, setContrast] = useState<Contrast>('normal');
@@ -24,13 +26,22 @@ export default function AccessibilityPage() {
     const updateOnlineStatus = () => setIsOfflineMode(!navigator.onLine);
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
+    
+    // Simulate page loading
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1400);
+    
     return () => {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
+      clearTimeout(timer);
     };
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted || isPageLoading) {
+    return <PageLoading message="Loading Accessibility Module..." />;
+  }
 
   const fontSizeClasses = {
     small: 'text-sm',

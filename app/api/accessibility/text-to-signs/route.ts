@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { Configuration, OpenAIApi } from 'openai';
+import { auth } from '@clerk/nextjs/server';
+import OpenAI from 'openai';
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 // Map of common words/phrases to sign animation names
 const signMap: { [key: string]: string[] } = {
@@ -58,8 +57,8 @@ const signMap: { [key: string]: string[] } = {
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -72,9 +71,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Use GPT-5 to break down the text into basic concepts that match our sign vocabulary
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-5-turbo',
+    // Use OpenAI to break down the text into basic concepts that match our sign vocabulary
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
       messages: [
         {
           role: 'system',
@@ -99,7 +98,7 @@ export async function POST(req: Request) {
       max_tokens: 100
     });
 
-    const concepts = completion.data.choices[0]?.message?.content;
+    const concepts = completion.choices[0]?.message?.content;
     if (!concepts) {
       throw new Error('Failed to break down text into concepts');
     }

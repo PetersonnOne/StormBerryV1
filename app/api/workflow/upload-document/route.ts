@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs';
+import { auth } from '@clerk/nextjs/server';
+import { uploadImage } from '@/utils/storage';
 
 export async function POST(request: Request) {
   try {
+    const { userId, getToken } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -22,14 +28,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Store file in Netlify Blobs
-    const store = getStore({ name: 'Documents' });
-    const blobKey = `doc-${Date.now()}-${file.name}`;
-    
-    const buffer = await file.arrayBuffer();
-    await store.set(blobKey, buffer);
+    const token = await getToken({ template: 'supabase' });
 
-    return NextResponse.json({ blobKey });
+    // Upload file to Supabase Storage
+    const fileUrl = await uploadImage(file, userId, token || undefined);
+
+    return NextResponse.json({ 
+      success: true,
+      fileUrl,
+      fileName: file.name 
+    });
   } catch (error) {
     console.error('Document upload error:', error);
     return NextResponse.json(

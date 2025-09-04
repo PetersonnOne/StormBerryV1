@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
+import ModelSelector from '@/components/ui/model-selector';
 
 type AnalysisResult = {
   summary: string;
@@ -24,6 +25,7 @@ export default function DocumentAnalyzer() {
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -65,14 +67,15 @@ export default function DocumentAnalyzer() {
       const { blobKey } = await uploadResponse.json();
       setProgress(30);
 
-      // Send for GPT-5 analysis
-      const analysisResponse = await fetch('/api/workflow/analyze-document', {
+      // Send for AI analysis
+      const analysisResponse = await fetch('/api/business/analyze-document', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          blobKey,
-          fileName: file.name,
-          fileType: file.name.split('.').pop()?.toLowerCase(),
+          content: `Document: ${file.name}`,
+          type: 'other',
+          analysisType: 'full',
+          model: selectedModel,
         }),
       });
 
@@ -100,12 +103,21 @@ export default function DocumentAnalyzer() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Document Analyzer</h2>
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={analyzing}
-        >
-          Select Document
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">AI Model:</span>
+            <ModelSelector
+              value={selectedModel}
+              onChange={setSelectedModel}
+            />
+          </div>
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={analyzing}
+          >
+            Select Document
+          </Button>
+        </div>
         <input
           type="file"
           ref={fileInputRef}

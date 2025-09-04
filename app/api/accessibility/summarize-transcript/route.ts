@@ -1,21 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { Configuration, OpenAIApi } from 'openai';
-import { put, get } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
+import OpenAI from 'openai';
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { transcript, language } = await req.json();
+    const { transcriptId, transcript, language } = await req.json();
 
     if (!transcript || !language) {
       return NextResponse.json(
@@ -24,9 +23,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate summary using GPT-5
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-5-turbo',
+    // Generate summary using OpenAI
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
       messages: [
         {
           role: 'system',
@@ -55,7 +54,7 @@ export async function POST(req: Request) {
       max_tokens: 500
     });
 
-    const summary = completion.data.choices[0]?.message?.content;
+    const summary = completion.choices[0]?.message?.content;
     if (!summary) {
       throw new Error('Failed to generate summary');
     }
@@ -63,22 +62,19 @@ export async function POST(req: Request) {
     // Parse the summary JSON
     const summaryData = JSON.parse(summary);
 
-    // Update the transcript metadata with the summary
-    const metadataFilename = `transcripts/${session.user.id}/metadata.json`;
-    const metadataBlob = await get(metadataFilename);
-    const metadata = metadataBlob ? JSON.parse(await metadataBlob.text()) : { transcripts: [] };
-
-    // Find and update the latest transcript with the summary
-    const latestTranscript = metadata.transcripts[metadata.transcripts.length - 1];
-    if (latestTranscript) {
-      latestTranscript.summary = summaryData;
-
-      // Save updated metadata
-      await put(metadataFilename, JSON.stringify(metadata), {
-        access: 'public',
-        contentType: 'application/json',
-        addOnly: false,
-      });
+    // Update the transcript with summary if transcriptId provided
+    if (transcriptId) {
+      const token = await getToken({ template: 'supabase' });
+      const existingTranscript = await textsService.getById(transcriptId, userId, token || undefined);
+      
+      if (existingTranscript) {
+        const content = JSON.parse(existingTranscript.content);
+        content.metadata.summary = summaryData;
+        
+        await textsService.update(transcriptId, userId, {
+          content: JSON.stringify(content)
+        }, token || undefined);
+      }
     }
 
     return NextResponse.json({

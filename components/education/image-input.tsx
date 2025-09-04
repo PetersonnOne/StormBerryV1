@@ -4,16 +4,21 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Image } from 'lucide-react';
-// import { getStore } from '@netlify/blobs'; // TODO: Add when package is installed
+import { uploadImage } from '@/utils/storage';
+import ModelSelector from '@/components/ui/model-selector';
 
 interface ImageInputProps {
   setLoading: (loading: boolean) => void;
+  onResponse: (response: string) => void;
 }
 
-export default function ImageInput({ setLoading }: ImageInputProps) {
+export default function ImageInput({ setLoading, onResponse }: ImageInputProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [question, setQuestion] = useState('');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-image');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -50,23 +55,39 @@ export default function ImageInput({ setLoading }: ImageInputProps) {
     try {
       setLoading(true);
 
-      // TODO: Upload to Netlify Blobs when package is installed
-      // const store = getStore({ name: 'education-images' });
-      // const uniqueKey = `${Date.now()}-${selectedImage.name}`;
-      // await store.set(uniqueKey, selectedImage);
-
-      // Simulate processing for now
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Upload to Supabase Storage
+      const imageUrl = await uploadImage(selectedImage, 'education-images');
       
-      toast({
-        title: 'Success',
-        description: 'Image processed successfully!',
+      // Call education API to process the image
+      const response = await fetch('/api/education/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: question || 'What do you see in this image? Please explain it in an educational context.',
+          type: 'image',
+          imageUrl: imageUrl,
+          model: selectedModel,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process image');
+      }
+
+      const data = await response.json();
+      onResponse(data.answer);
+      setSelectedImage(null);
+      setPreview(null);
+      setQuestion('');
       
     } catch (error) {
+      console.error('Education image input error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process image',
+        description: error instanceof Error ? error.message : 'Failed to process image',
         variant: 'destructive',
       });
     } finally {
@@ -76,12 +97,27 @@ export default function ImageInput({ setLoading }: ImageInputProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-sm font-medium">AI Model:</span>
+        <ModelSelector
+          value={selectedModel}
+          onChange={setSelectedModel}
+        />
+      </div>
+      
       <input
         type="file"
         accept="image/*"
         onChange={handleImageSelect}
         className="hidden"
         ref={fileInputRef}
+      />
+
+      <Textarea
+        placeholder="Ask a question about the image (optional)..."
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        className="min-h-[80px]"
       />
 
       <Card

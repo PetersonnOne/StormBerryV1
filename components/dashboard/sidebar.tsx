@@ -9,16 +9,20 @@ import {
   BookOpen,
   Briefcase,
   Sparkles,
-  Accessibility
+  Accessibility,
+  LayoutDashboard,
+  MessageSquare
 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Chat', href: '/chat', icon: MessageSquare },
   { name: 'Education', href: '/education', icon: BookOpen },
   { name: 'Business / Productivity', href: '/business', icon: Briefcase },
   { name: 'Creativity', href: '/story', icon: Sparkles },
   { name: 'Accessibility', href: '/accessibility', icon: Accessibility },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 const recentConversations = [
@@ -67,33 +71,6 @@ export function DashboardSidebar() {
         </div>
       </nav>
 
-      {/* Recent Items (optional placeholder retained) */}
-      <div className="px-4 py-4 border-t">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium">Recent Items</h3>
-          <Button variant="ghost" size="sm">
-            {/* Placeholder for future quick actions */}
-            <Settings className="h-4 w-4" />
-          </Button>
-        </div>
-        <ScrollArea className="h-48">
-          <div className="space-y-1">
-            {recentConversations.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-2 text-sm rounded-md hover:bg-accent cursor-pointer group"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="truncate font-medium">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.updatedAt}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
     </div>
   )
 }

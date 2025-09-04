@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function POST(request: Request) {
   try {
-    const { blobKey, fileName, fileType } = await request.json();
+    const { userId, getToken } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Retrieve document from Netlify Blobs
-    const store = getStore({ name: 'Documents' });
-    const document = await store.get(blobKey);
+    const { fileUrl, fileName, fileType } = await request.json();
 
-    if (!document) {
+    if (!fileUrl) {
       return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
+        { error: 'File URL required' },
+        { status: 400 }
       );
     }
 
@@ -29,8 +31,7 @@ export async function POST(request: Request) {
       documentContent = 'XLSX content extracted';
     }
 
-    // Placeholder for GPT-5 analysis
-    // TODO: Replace with actual GPT-5 API call
+    // Placeholder for document analysis
     const analysisResult = {
       summary: 'This document outlines the Q1 2024 financial projections and strategic initiatives.',
       insights: [
@@ -51,15 +52,34 @@ export async function POST(request: Request) {
       metadata: {
         fileName,
         fileType,
+        fileUrl,
         pageCount: 15,
         wordCount: 5000
       }
     };
 
-    // Store analysis result
-    await store.set(`${blobKey}-analysis`, JSON.stringify(analysisResult));
+    const token = await getToken({ template: 'supabase' });
 
-    return NextResponse.json(analysisResult);
+    // Store analysis result in Supabase
+    const analysisData = {
+      content: JSON.stringify({
+        analysisResult,
+        metadata: {
+          type: 'document-analysis',
+          fileName,
+          fileType,
+          fileUrl,
+          analyzedAt: new Date().toISOString(),
+        }
+      })
+    };
+
+    const result = await textsService.create(userId, analysisData, token || undefined);
+
+    return NextResponse.json({
+      ...analysisResult,
+      id: result.id
+    });
   } catch (error) {
     console.error('Document analysis error:', error);
     return NextResponse.json(

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from 'react-hot-toast'
+import { ClerkProvider } from '@clerk/nextjs'
+import { clerkConfig } from '@/utils/clerk'
 // Analytics temporarily disabled for deployment
 // import { Analytics } from '@/components/analytics'
 
@@ -75,23 +77,24 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="font-sans">
-        {/* Removed ClerkProvider to disable authentication globally */}
-        <Providers>
-          {children}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: 'hsl(var(--background))',
-                color: 'hsl(var(--foreground))',
-                border: '1px solid hsl(var(--border))',
-              },
-            }}
-          />
-          {/* Analytics temporarily disabled for deployment */}
-          {/* <Analytics /> */}
-        </Providers>
+        <ClerkProvider {...clerkConfig}>
+          <Providers>
+            {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: 'hsl(var(--background))',
+                  color: 'hsl(var(--foreground))',
+                  border: '1px solid hsl(var(--border))',
+                },
+              }}
+            />
+            {/* Analytics temporarily disabled for deployment */}
+            {/* <Analytics /> */}
+          </Providers>
+        </ClerkProvider>
       </body>
     </html>
   )

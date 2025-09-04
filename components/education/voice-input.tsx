@@ -5,14 +5,17 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Mic, Square } from 'lucide-react';
+import ModelSelector from '@/components/ui/model-selector';
 
 interface VoiceInputProps {
   setLoading: (loading: boolean) => void;
+  onResponse: (response: string) => void;
 }
 
-export default function VoiceInput({ setLoading }: VoiceInputProps) {
+export default function VoiceInput({ setLoading, onResponse }: VoiceInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -72,11 +75,33 @@ export default function VoiceInput({ setLoading }: VoiceInputProps) {
 
     try {
       setLoading(true);
-      // TODO: Implement GPT-5 API call with transcript
+      
+      const response = await fetch('/api/education/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: transcript.trim(),
+          type: 'voice',
+          model: selectedModel,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process speech');
+      }
+
+      const data = await response.json();
+      onResponse(data.answer);
+      setTranscript(''); // Clear transcript after successful submission
+      
     } catch (error) {
+      console.error('Education voice input error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process speech',
+        description: error instanceof Error ? error.message : 'Failed to process speech',
         variant: 'destructive',
       });
     } finally {
@@ -86,6 +111,13 @@ export default function VoiceInput({ setLoading }: VoiceInputProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-sm font-medium">AI Model:</span>
+        <ModelSelector
+          value={selectedModel}
+          onChange={setSelectedModel}
+        />
+      </div>
       <div className="flex justify-center">
         <Button
           onClick={isRecording ? stopRecording : startRecording}

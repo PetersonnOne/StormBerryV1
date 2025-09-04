@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { PageLoading } from '@/components/ui/page-loading';
 
 // Dynamic imports for better performance
 const StoryEditor = dynamic(() => import('@/components/story/story-editor').then(mod => ({ default: mod.StoryEditor })), {
@@ -21,6 +22,19 @@ const StoryExporter = dynamic(() => import('@/components/story/story-exporter').
 
 export default function StoryPage() {
   const [activeTab, setActiveTab] = useState('editor');
+  const [isPageLoading, setIsPageLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1300);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isPageLoading) {
+    return <PageLoading message="Loading Creativity Module..." />;
+  }
 
   return (
     <div className="p-6">

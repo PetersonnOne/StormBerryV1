@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
 import Carousel from '@/components/carousel'
+import { InlineLoading } from '@/components/ui/page-loading'
+
 import { 
   MessageSquare, 
   Code, 
@@ -17,12 +19,15 @@ import {
   ArrowRight,
   Star,
   CheckCircle,
-  X
+  X,
+  Menu
 } from 'lucide-react'
 
 export default function HomePage() {
   const [showPopup, setShowPopup] = useState(false)
-  const [showBetaModal, setShowBetaModal] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [signInLoading, setSignInLoading] = useState(false)
+  const [signUpLoading, setSignUpLoading] = useState(false)
 
   const handleComingSoonClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -30,21 +35,15 @@ export default function HomePage() {
     setTimeout(() => setShowPopup(false), 3000)
   }
 
-  const handleBetaAccess = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setShowBetaModal(true)
+  const handleSignInClick = () => {
+    setSignInLoading(true)
+    // Loading state will be cleared when navigation completes
   }
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout
-    if (showBetaModal) {
-      timer = setTimeout(() => {
-        setShowBetaModal(false)
-        window.location.href = '/dashboard'
-      }, 5000)
-    }
-    return () => clearTimeout(timer)
-  }, [showBetaModal])
+  const handleSignUpClick = () => {
+    setSignUpLoading(true)
+    // Loading state will be cleared when navigation completes
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -61,15 +60,89 @@ export default function HomePage() {
             <Link href="/features" className="text-sm font-medium hover:text-primary transition-colors">
               Features
             </Link>
-            <a onClick={handleBetaAccess} className="text-sm font-medium hover:text-primary transition-colors cursor-pointer">
-              Sign In
-            </a>
-            <Button onClick={handleBetaAccess}>
-              Get Started
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button 
+              variant="ghost" 
+              asChild 
+              disabled={signInLoading}
+              onClick={handleSignInClick}
+            >
+              <Link href="/sign-in" className="text-sm font-medium">
+                {signInLoading ? <InlineLoading /> : "Sign In"}
+              </Link>
+            </Button>
+            <Button asChild disabled={signUpLoading} onClick={handleSignUpClick}>
+              <Link href="/sign-up">
+                {signUpLoading ? (
+                  <InlineLoading />
+                ) : (
+                  <>
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Link>
             </Button>
           </nav>
+          
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
+        
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t bg-background">
+            <div className="container px-4 py-4 space-y-4">
+              <Link 
+                href="/features" 
+                className="block text-sm font-medium hover:text-primary transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Features
+              </Link>
+              <Button 
+                variant="ghost" 
+                asChild 
+                className="w-full justify-start"
+                disabled={signInLoading}
+                onClick={() => {
+                  handleSignInClick()
+                  setMobileMenuOpen(false)
+                }}
+              >
+                <Link href="/sign-in" className="text-sm font-medium">
+                  {signInLoading ? <InlineLoading /> : "Sign In"}
+                </Link>
+              </Button>
+              <Button 
+                asChild 
+                className="w-full"
+                disabled={signUpLoading}
+                onClick={() => {
+                  handleSignUpClick()
+                  setMobileMenuOpen(false)
+                }}
+              >
+                <Link href="/sign-up">
+                  {signUpLoading ? (
+                    <InlineLoading />
+                  ) : (
+                    <>
+                      Get Started
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Carousel Hero Section */}
@@ -93,22 +166,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Beta Phase Modal */}
-      {showBetaModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative dark:bg-gray-800">
-            <button
-              onClick={() => setShowBetaModal(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <p className="text-center text-gray-800 dark:text-gray-200 mt-4">
-              Storm Berry Tools is in Beta Phase, so you get limited free AI trials everyday
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Features Section */}
       <section className="container px-4 py-16 mx-auto">
@@ -196,12 +253,35 @@ export default function HomePage() {
             Join thousands of professionals who are already using Storm Berry to optimize their schedules and achieve more
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleBetaAccess}>
-              Sign In
+            <Button 
+              size="lg" 
+              className="bg-primary text-primary-foreground hover:bg-primary/90" 
+              asChild
+              disabled={signInLoading}
+              onClick={handleSignInClick}
+            >
+              <Link href="/sign-in">
+                {signInLoading ? <InlineLoading /> : "Sign In"}
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-2 border-white text-black bg-white hover:bg-gray-100 hover:border-gray-200 transition-all duration-200" onClick={handleBetaAccess}>
-              Get Started
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-2 border-white text-black bg-white hover:bg-gray-100 hover:border-gray-200 transition-all duration-200" 
+              asChild
+              disabled={signUpLoading}
+              onClick={handleSignUpClick}
+            >
+              <Link href="/sign-up">
+                {signUpLoading ? (
+                  <InlineLoading />
+                ) : (
+                  <>
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Link>
             </Button>
           </div>
         </div>
@@ -226,19 +306,6 @@ export default function HomePage() {
                 Coming Sep 1 2025
               </p>
             </div>
-          </div>
-        </div>
-      )}
-      {showBetaModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 relative">
-            <button 
-              onClick={() => setShowBetaModal(false)} 
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              ×
-            </button>
-            <p className="text-center text-lg font-medium">Storm Berry Tools is in Beta Phase, so you get limited free AI trials everyday</p>
           </div>
         </div>
       )}

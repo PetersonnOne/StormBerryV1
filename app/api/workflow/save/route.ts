@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function POST(request: Request) {
   try {
+    const { userId, getToken } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const workflow = await request.json();
     
     // Validate workflow data
@@ -13,11 +19,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Store workflow in Netlify Blobs
-    const store = getStore({ name: 'Workflows' });
-    await store.set(workflow.id, JSON.stringify(workflow));
+    const token = await getToken({ template: 'supabase' });
 
-    return NextResponse.json({ success: true });
+    // Store workflow in Supabase
+    const workflowData = {
+      content: JSON.stringify({
+        workflow,
+        metadata: {
+          type: 'workflow',
+          workflowId: workflow.id,
+          name: workflow.name,
+          stepCount: workflow.steps.length,
+          lastModified: new Date().toISOString(),
+        }
+      })
+    };
+
+    const result = await textsService.create(userId, workflowData, token || undefined);
+
+    return NextResponse.json({ 
+      success: true,
+      id: result.id 
+    });
   } catch (error) {
     console.error('Workflow save error:', error);
     return NextResponse.json(
@@ -29,19 +52,29 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const store = getStore({ name: 'Workflows' });
-    const keys = await store.list();
-    
-    const workflows = await Promise.all(
-      keys.map(async (key) => {
-        const data = await store.get(key);
-        return data ? JSON.parse(data as string) : null;
-      })
-    );
+    const { userId, getToken } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    return NextResponse.json(
-      workflows.filter(Boolean)
-    );
+    const token = await getToken({ template: 'supabase' });
+    const allTexts = await textsService.getAll(userId, token || undefined);
+    
+    const workflows = allTexts
+      .filter(text => {
+        try {
+          const content = JSON.parse(text.content);
+          return content.metadata?.type === 'workflow';
+        } catch {
+          return false;
+        }
+      })
+      .map(text => {
+        const content = JSON.parse(text.content);
+        return content.workflow;
+      });
+
+    return NextResponse.json(workflows);
   } catch (error) {
     console.error('Workflow fetch error:', error);
     return NextResponse.json(

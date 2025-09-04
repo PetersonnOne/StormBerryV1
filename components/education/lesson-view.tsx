@@ -5,10 +5,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-// import { getStore } from '@netlify/blobs'; // TODO: Add when package is installed
 
 interface LessonViewProps {
   loading: boolean;
+  lessonData?: any;
 }
 
 interface Lesson {
@@ -18,20 +18,27 @@ interface Lesson {
   timestamp: number;
 }
 
-export default function LessonView({ loading }: LessonViewProps) {
+export default function LessonView({ loading, lessonData }: LessonViewProps) {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    loadLatestLesson();
-  }, []);
+    if (lessonData) {
+      setCurrentLesson(lessonData);
+    } else {
+      loadLatestLesson();
+    }
+  }, [lessonData]);
 
   const loadLatestLesson = async () => {
     try {
-      const store = getStore({ name: 'education-lessons' });
-      const lessonData = await store.get('latest-lesson');
-      if (lessonData) {
-        setCurrentLesson(JSON.parse(lessonData as string));
+      // Fetch latest lesson from education API
+      const response = await fetch('/api/education?type=lesson');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.lesson) {
+          setCurrentLesson(data.lesson);
+        }
       }
     } catch (error) {
       console.error('Failed to load lesson:', error);
@@ -40,13 +47,23 @@ export default function LessonView({ loading }: LessonViewProps) {
 
   const saveProgress = async (newProgress: number) => {
     try {
-      const store = getStore({ name: 'education-progress' });
-      await store.set('current-progress', JSON.stringify({
-        lessonId: currentLesson?.timestamp,
-        progress: newProgress,
-        updatedAt: Date.now(),
-      }));
-      setProgress(newProgress);
+      // Save progress via API
+      const response = await fetch('/api/education', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'progress',
+          content: {
+            lessonId: currentLesson?.timestamp,
+            progress: newProgress,
+            updatedAt: Date.now(),
+          }
+        }),
+      });
+      
+      if (response.ok) {
+        setProgress(newProgress);
+      }
     } catch (error) {
       console.error('Failed to save progress:', error);
     }

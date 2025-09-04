@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, ChevronDown, ChevronUp, Download } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useUser } from '@clerk/nextjs';
 
 interface ConversationHistoryProps {
   isOfflineMode: boolean;
@@ -23,7 +23,7 @@ interface Transcript {
 }
 
 export default function ConversationHistory({ isOfflineMode }: ConversationHistoryProps) {
-  const { data: session } = useSession();
+  const { user } = useUser();
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedTranscript, setExpandedTranscript] = useState<string | null>(null);
@@ -31,13 +31,13 @@ export default function ConversationHistory({ isOfflineMode }: ConversationHisto
   const [transcriptContent, setTranscriptContent] = useState<string>('');
 
   useEffect(() => {
-    if (!session?.user || isOfflineMode) {
+    if (!user || isOfflineMode) {
       setIsLoading(false);
       return;
     }
 
     loadTranscripts();
-  }, [session, isOfflineMode]);
+  }, [user, isOfflineMode]);
 
   const loadTranscripts = async () => {
     try {

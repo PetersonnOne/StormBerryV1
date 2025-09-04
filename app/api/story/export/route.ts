@@ -1,42 +1,71 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { put, get } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
+import { uploadImage } from '@/utils/storage';
 import OpenAI from 'openai';
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { format, options, title, description } = await req.json();
+    const token = await getToken({ template: 'supabase' });
 
-    // Fetch story content
-    const storyMetadataBlob = await get(`stories/${session.user.id}/metadata.json`);
-    const storyMetadata = storyMetadataBlob ? JSON.parse(await storyMetadataBlob.text()) : [];
-    const latestStory = storyMetadata[storyMetadata.length - 1];
-    const storyContentBlob = await get(latestStory.filename);
-    const storyContent = await storyContentBlob.text();
+    // Fetch all user texts to find story, character, and world data
+    const allTexts = await textsService.getAll(userId, token || undefined);
+
+    // Get latest story content
+    const storyTexts = allTexts.filter(text => {
+      try {
+        const content = JSON.parse(text.content);
+        return content.metadata?.type === 'story';
+      } catch {
+        return false;
+      }
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    const latestStory = storyTexts[0];
+    if (!latestStory) {
+      return NextResponse.json({ error: 'No story content found' }, { status: 404 });
+    }
+
+    const storyContent = JSON.parse(latestStory.content).story || JSON.parse(latestStory.content).content;
 
     // Fetch character data if needed
     let characters = [];
     if (options.includeCharacterProfiles) {
-      const characterMetadataBlob = await get(`characters/${session.user.id}/metadata.json`);
-      const characterMetadata = characterMetadataBlob ? JSON.parse(await characterMetadataBlob.text()) : [];
-      const latestCharacters = characterMetadata[characterMetadata.length - 1];
-      const characterDataBlob = await get(latestCharacters.filename);
-      characters = JSON.parse(await characterDataBlob.text());
+      const characterTexts = allTexts.filter(text => {
+        try {
+          const content = JSON.parse(text.content);
+          return content.metadata?.type === 'characters';
+        } catch {
+          return false;
+        }
+      }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      if (characterTexts[0]) {
+        characters = JSON.parse(characterTexts[0].content).characters || [];
+      }
     }
 
     // Fetch world data if needed
     let worldData = null;
     if (options.includeWorldGuide) {
-      const worldMetadataBlob = await get(`worlds/${session.user.id}/metadata.json`);
-      const worldMetadata = worldMetadataBlob ? JSON.parse(await worldMetadataBlob.text()) : [];
-      const latestWorld = worldMetadata[worldMetadata.length - 1];
-      const worldDataBlob = await get(latestWorld.filename);
-      worldData = JSON.parse(await worldDataBlob.text());
+      const worldTexts = allTexts.filter(text => {
+        try {
+          const content = JSON.parse(text.content);
+          return content.metadata?.type === 'world';
+        } catch {
+          return false;
+        }
+      }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      if (worldTexts[0]) {
+        worldData = JSON.parse(worldTexts[0].content).worldData || null;
+      }
     }
 
     let exportedContent = '';
@@ -91,6 +120,7 @@ export async function POST(req: Request) {
     }
 
     // Generate narration if requested
+    let narrationUrl = null;
     if (options.addNarration) {
       const narrationResponse = await fetch('https://api.aimlapi.com/eleven-labs/text-to-speech', {
         method: 'POST',
@@ -111,33 +141,33 @@ export async function POST(req: Request) {
       }
 
       const narrationData = await narrationResponse.arrayBuffer();
-      const narrationFilename = `exports/${session.user.id}/narration/${title}-${Date.now()}.mp3`;
-      await put(narrationFilename, narrationData, {
-        access: 'public',
-        contentType: 'audio/mpeg',
-      });
+      const narrationFile = new File([narrationData], `${title}-narration.mp3`, { type: 'audio/mpeg' });
+      narrationUrl = await uploadImage(narrationFile, userId, token || undefined);
     }
 
-    // Save the exported content
-    const timestamp = new Date().toISOString();
-    const filename = `exports/${session.user.id}/${format}/${title.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.${fileExtension}`;
+    // Save the exported content as a text record
+    const exportData = {
+      content: JSON.stringify({
+        exportedContent,
+        metadata: {
+          type: 'export',
+          title,
+          description,
+          format,
+          options,
+          narrationUrl,
+          timestamp: new Date().toISOString(),
+        }
+      })
+    };
 
-    const blob = await put(filename, exportedContent, {
-      access: 'public',
-      contentType,
-      metadata: {
-        userId: session.user.id,
-        title,
-        description,
-        format,
-        options: JSON.stringify(options),
-        timestamp,
-      },
-    });
+    const result = await textsService.create(userId, exportData, token || undefined);
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
+      id: result.id,
+      downloadContent: exportedContent,
+      narrationUrl,
     });
 
   } catch (error) {

@@ -1,4 +1,4 @@
-import { getStore, Store } from '@netlify/blobs';
+import { textsService } from '@/lib/db/texts';
 
 interface GPTResponse {
   content: string;
@@ -17,13 +17,8 @@ interface QuizQuestion {
 
 export class GPTEducationService {
   private static instance: GPTEducationService;
-  private lessonStore: Store;
-  private quizStore: Store;
 
-  private constructor() {
-    this.lessonStore = getStore('education-lessons');
-    this.quizStore = getStore('education-quizzes');
-  }
+  private constructor() {}
 
   static getInstance(): GPTEducationService {
     if (!GPTEducationService.instance) {
@@ -32,9 +27,9 @@ export class GPTEducationService {
     return GPTEducationService.instance;
   }
 
-  async processTextQuestion(question: string): Promise<GPTResponse> {
+  async processTextQuestion(question: string, userId: string, token?: string): Promise<GPTResponse> {
     try {
-      // TODO: Implement GPT-5 API call
+      // TODO: Implement AI API call
       const response: GPTResponse = {
         content: 'Sample response content',
         level: 1,
@@ -42,7 +37,7 @@ export class GPTEducationService {
         timestamp: Date.now(),
       };
 
-      await this.saveLesson(response);
+      await this.saveLesson(response, userId, token);
       return response;
     } catch (error) {
       console.error('Failed to process text question:', error);
@@ -50,9 +45,9 @@ export class GPTEducationService {
     }
   }
 
-  async processVoiceInput(transcript: string): Promise<GPTResponse> {
+  async processVoiceInput(transcript: string, userId: string, token?: string): Promise<GPTResponse> {
     try {
-      // TODO: Implement GPT-5 API call for voice input
+      // TODO: Implement AI API call for voice input
       const response: GPTResponse = {
         content: 'Sample voice response content',
         level: 1,
@@ -60,7 +55,7 @@ export class GPTEducationService {
         timestamp: Date.now(),
       };
 
-      await this.saveLesson(response);
+      await this.saveLesson(response, userId, token);
       return response;
     } catch (error) {
       console.error('Failed to process voice input:', error);
@@ -68,9 +63,9 @@ export class GPTEducationService {
     }
   }
 
-  async processImage(imageUrl: string): Promise<GPTResponse> {
+  async processImage(imageUrl: string, userId: string, token?: string): Promise<GPTResponse> {
     try {
-      // TODO: Implement GPT-5 API call for image analysis
+      // TODO: Implement AI API call for image analysis
       const response: GPTResponse = {
         content: 'Sample image analysis content',
         level: 1,
@@ -78,7 +73,7 @@ export class GPTEducationService {
         timestamp: Date.now(),
       };
 
-      await this.saveLesson(response);
+      await this.saveLesson(response, userId, token);
       return response;
     } catch (error) {
       console.error('Failed to process image:', error);
@@ -86,9 +81,9 @@ export class GPTEducationService {
     }
   }
 
-  async generateQuiz(topic: string, difficulty: number): Promise<QuizQuestion[]> {
+  async generateQuiz(topic: string, difficulty: number, userId: string, token?: string): Promise<QuizQuestion[]> {
     try {
-      // TODO: Implement GPT-5 API call for quiz generation
+      // TODO: Implement AI API call for quiz generation
       const questions: QuizQuestion[] = [
         {
           id: 'sample-1',
@@ -99,7 +94,7 @@ export class GPTEducationService {
         },
       ];
 
-      await this.saveQuiz(questions);
+      await this.saveQuiz(questions, userId, token);
       return questions;
     } catch (error) {
       console.error('Failed to generate quiz:', error);
@@ -107,18 +102,39 @@ export class GPTEducationService {
     }
   }
 
-  private async saveLesson(lesson: GPTResponse): Promise<void> {
+  private async saveLesson(lesson: GPTResponse, userId: string, token?: string): Promise<void> {
     try {
-      await this.lessonStore.set('latest-lesson', JSON.stringify(lesson));
+      const lessonData = {
+        content: JSON.stringify({
+          lesson,
+          metadata: {
+            type: 'education-lesson',
+            topic: lesson.topic,
+            level: lesson.level,
+            timestamp: lesson.timestamp,
+          }
+        })
+      };
+      await textsService.create(userId, lessonData, token);
     } catch (error) {
       console.error('Failed to save lesson:', error);
       throw error;
     }
   }
 
-  private async saveQuiz(questions: QuizQuestion[]): Promise<void> {
+  private async saveQuiz(questions: QuizQuestion[], userId: string, token?: string): Promise<void> {
     try {
-      await this.quizStore.set('current-quiz', JSON.stringify(questions));
+      const quizData = {
+        content: JSON.stringify({
+          questions,
+          metadata: {
+            type: 'education-quiz',
+            questionCount: questions.length,
+            createdAt: new Date().toISOString(),
+          }
+        })
+      };
+      await textsService.create(userId, quizData, token);
     } catch (error) {
       console.error('Failed to save quiz:', error);
       throw error;

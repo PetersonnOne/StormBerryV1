@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { put } from '@vercel/blob';
+import { auth } from '@clerk/nextjs/server';
+import { textsService } from '@/lib/db/texts';
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession({ req });
-    if (!session?.user) {
+    const { userId, getToken } = auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -14,48 +14,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'World name is required' }, { status: 400 });
     }
 
-    // Generate a unique filename for the world data
-    const timestamp = new Date().toISOString();
-    const filename = `worlds/${session.user.id}/${worldData.name.toLowerCase().replace(/\s+/g, '-')}.json`;
+    const token = await getToken({ template: 'supabase' });
 
-    // Save world data to Netlify Blobs
-    const blob = await put(filename, JSON.stringify(worldData), {
-      access: 'private',
-      contentType: 'application/json',
-      metadata: {
-        userId: session.user.id,
-        worldName: worldData.name,
-        lastModified: timestamp,
-      },
-    });
+    // Save world data as structured content
+    const worldContent = {
+      content: JSON.stringify({
+        worldData,
+        metadata: {
+          type: 'world',
+          worldName: worldData.name,
+          lastModified: new Date().toISOString(),
+        }
+      })
+    };
 
-    // Save world metadata for easier querying
-    const metadataFilename = `worlds/${session.user.id}/metadata.json`;
-    const existingMetadataBlob = await get(metadataFilename);
-    let existingMetadata = [];
-    
-    if (existingMetadataBlob) {
-      existingMetadata = JSON.parse(await existingMetadataBlob.text());
-    }
-
-    const updatedMetadata = [
-      ...existingMetadata.filter(m => m.filename !== filename),
-      {
-        filename,
-        worldName: worldData.name,
-        lastModified: timestamp,
-      }
-    ];
-
-    await put(metadataFilename, JSON.stringify(updatedMetadata), {
-      access: 'private',
-      contentType: 'application/json',
-    });
+    const result = await textsService.create(userId, worldContent, token || undefined);
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
-      filename,
+      id: result.id,
+      created_at: result.created_at,
     });
 
   } catch (error) {

@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 // import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 // import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-// import { getStore } from '@netlify/blobs'; // TODO: Add when package is installed
 
 interface Question {
   id: string;
@@ -40,17 +39,41 @@ export default function QuizSection() {
   const loadQuizQuestions = async () => {
     try {
       setLoading(true);
-      const store = getStore({ name: 'education-quizzes' });
-      const quizData = await store.get('current-quiz');
-      if (quizData) {
-        const questions = JSON.parse(quizData as string);
-        setQuizState(prev => ({ ...prev, questions }));
+      // Generate quiz using education API
+      const response = await fetch('/api/education/generate-quiz', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic: 'General Knowledge',
+          difficulty: 'medium',
+          questionCount: 5,
+          questionTypes: ['multiple-choice'],
+          model: 'gemini-2.5-pro',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate quiz');
+      }
+
+      const data = await response.json();
+      if (data.quiz && data.quiz.questions) {
+        setQuizState(prev => ({ 
+          ...prev, 
+          questions: data.quiz.questions,
+          currentIndex: 0,
+          answers: {},
+          showExplanation: false
+        }));
       }
     } catch (error) {
       console.error('Failed to load quiz:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load quiz questions',
+        description: error instanceof Error ? error.message : 'Failed to load quiz questions',
         variant: 'destructive',
       });
     } finally {
