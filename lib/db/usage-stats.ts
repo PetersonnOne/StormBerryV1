@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Use service role key for server-side operations
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Use anon key for server-side operations (in production, use service role key)
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export interface UsageStats {
   id?: string;

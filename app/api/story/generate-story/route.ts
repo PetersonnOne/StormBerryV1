@@ -12,7 +12,7 @@ const storyRequestSchema = z.object({
   characters: z.array(z.string()).optional(),
   setting: z.string().optional(),
   tone: z.enum(['serious', 'humorous', 'dramatic', 'mysterious', 'romantic', 'adventure']).optional(),
-  model: z.string().default('gemini-2.5-pro'),
+  model: z.string().default('gpt-oss-120b'),
 })
 
 export async function POST(request: NextRequest) {
@@ -67,7 +67,7 @@ Focus on storytelling craft: show don't tell, use active voice, create emotional
     const startTime = Date.now()
     const response = await aiService.generateContent(
       storyPrompt,
-      model,
+      model as any,
       systemPrompt,
       length === 'long' ? 3000 : length === 'medium' ? 2000 : 1200
     )

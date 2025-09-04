@@ -9,7 +9,9 @@
 - **Module 2 — Business/Productivity:** AI Workflow Orchestrator
 - **Module 3 — Creativity:** Collaborative Story & Media Creator
 - **Module 4 — Accessibility:** AI Companion for the Deaf & Hard of Hearing
-- 
+- **Module 5 — Research:** AI Research Companion for study and brainstorming
+
+### For Seting up or Replicating the Project Functionality Refer to the HowTo folder in the projects root. This is where you find all the instructions to setup and use the project in both dvelopment and production environments.
 
 ### Setup Supabase SQL Scripts
 Inside the Migrations project folder, you will find the Scripts to run in Supabase SQL Editor of your project, to setup the necessary database objects.

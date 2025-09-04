@@ -8,7 +8,7 @@ import { z } from 'zod'
 const chatRequestSchema = z.object({
   message: z.string().min(1).max(4000),
   conversationId: z.string().optional(),
-  model: z.string().default('gpt-4'),
+  model: z.string().default('gpt-oss-120b'),
   temperature: z.number().min(0).max(2).default(0.7),
   maxTokens: z.number().min(1).max(4000).default(1000),
 })

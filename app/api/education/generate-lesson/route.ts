@@ -61,7 +61,7 @@ Make it engaging, practical, and appropriate for ${difficulty} level.`
     const startTime = Date.now()
     const response = await aiService.generateContent(
       prompt,
-      'gemini-2.5-pro',
+'gpt-oss-120b',
       systemPrompt,
       2000 // Allow more tokens for detailed lesson plans
     )

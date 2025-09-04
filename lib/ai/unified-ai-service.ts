@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { geminiService, ModelType } from './gemini-service';
 import { openRouterService } from './openrouter-service';
+import { groqService } from './groq-service';
 
 interface AIResponse {
   content: string;
@@ -21,8 +22,8 @@ interface AIStatus {
 
 class UnifiedAIService {
   private openai: OpenAI;
-  private defaultModel: ModelType = 'gemini-2.5-pro'; // Changed default to Gemini 2.5 Pro
-  private fallbackOrder: ModelType[] = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gpt-oss-120b'];
+  private defaultModel: ModelType = 'gpt-oss-120b'; // Changed default to GPT-OSS 120B
+  private fallbackOrder: ModelType[] = ['gpt-oss-120b', 'gemini-2.5-pro', 'gemini-2.5-flash'];
   private imageModel: ModelType = 'gemini-2.5-flash-image';
   private disabledModels: ModelType[] = ['gpt-5']; // GPT-5 is disabled but visible
 
@@ -54,8 +55,8 @@ class UnifiedAIService {
       throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your environment variables to use Gemini models.');
     }
 
-    if (model === 'gpt-oss-120b' && !process.env.OPENROUTER_API_KEY) {
-      throw new Error('OpenRouter API key not configured. Please add OPENROUTER_API_KEY to your environment variables to use GPT-OSS 120B.');
+    if (model === 'gpt-oss-120b' && !process.env.GROQ_API_KEY && !process.env.OPENROUTER_API_KEY) {
+      throw new Error('Neither Groq nor OpenRouter API key configured. Please add GROQ_API_KEY or OPENROUTER_API_KEY to your environment variables to use GPT-OSS 120B.');
     }
 
     const fallbackChain: string[] = [];
@@ -76,15 +77,38 @@ class UnifiedAIService {
           // GPT-5 is disabled, this should not be reached due to disabled check
           throw new Error('GPT-5 is currently disabled');
         } else if (tryModel === 'gpt-oss-120b') {
-          const openRouterResponse = await openRouterService.generateText(prompt, systemPrompt, maxTokens);
-          response = {
-            content: openRouterResponse.content,
-            model: 'gpt-oss-120b',
-            tokensUsed: openRouterResponse.tokensUsed,
-            cost: openRouterResponse.cost,
-          };
-        } else {
+          // Try Groq first, then fallback to OpenRouter for GPT-OSS 120B
+          try {
+            if (process.env.GROQ_API_KEY) {
+              console.log('Attempting GPT-OSS via Groq...');
+              const groqResponse = await groqService.generateText(prompt, systemPrompt, maxTokens);
+              response = {
+                content: groqResponse.content,
+                model: 'gpt-oss-120b-groq',
+                tokensUsed: groqResponse.tokensUsed,
+                cost: groqResponse.cost,
+              };
+            } else {
+              throw new Error('Groq API key not available, trying OpenRouter fallback');
+            }
+          } catch (groqError) {
+            console.log('Groq failed, falling back to OpenRouter:', groqError);
+            if (process.env.OPENROUTER_API_KEY) {
+              const openRouterResponse = await openRouterService.generateText(prompt, systemPrompt, maxTokens);
+              response = {
+                content: openRouterResponse.content,
+                model: 'gpt-oss-120b-openrouter',
+                tokensUsed: openRouterResponse.tokensUsed,
+                cost: openRouterResponse.cost,
+              };
+            } else {
+              throw new Error('Both Groq and OpenRouter failed for GPT-OSS 120B');
+            }
+          }
+        } else if (tryModel === 'gemini-2.5-pro' || tryModel === 'gemini-2.5-flash') {
           response = await geminiService.generateContent(prompt, tryModel, systemPrompt);
+        } else {
+          throw new Error(`Unsupported model for text generation: ${tryModel}`);
         }
         
         // Add fallback information
@@ -189,15 +213,38 @@ class UnifiedAIService {
           // GPT-5 is disabled, this should not be reached due to disabled check
           throw new Error('GPT-5 is currently disabled');
         } else if (tryModel === 'gpt-oss-120b') {
-          const openRouterResponse = await openRouterService.generateText(prompt, systemPrompt, maxTokens);
-          response = {
-            content: openRouterResponse.content,
-            model: 'gpt-oss-120b',
-            tokensUsed: openRouterResponse.tokensUsed,
-            cost: openRouterResponse.cost,
-          };
-        } else {
+          // Try Groq first, then fallback to OpenRouter for GPT-OSS 120B
+          try {
+            if (process.env.GROQ_API_KEY) {
+              console.log('Attempting GPT-OSS via Groq...');
+              const groqResponse = await groqService.generateText(prompt, systemPrompt, maxTokens);
+              response = {
+                content: groqResponse.content,
+                model: 'gpt-oss-120b-groq',
+                tokensUsed: groqResponse.tokensUsed,
+                cost: groqResponse.cost,
+              };
+            } else {
+              throw new Error('Groq API key not available, trying OpenRouter fallback');
+            }
+          } catch (groqError) {
+            console.log('Groq failed, falling back to OpenRouter:', groqError);
+            if (process.env.OPENROUTER_API_KEY) {
+              const openRouterResponse = await openRouterService.generateText(prompt, systemPrompt, maxTokens);
+              response = {
+                content: openRouterResponse.content,
+                model: 'gpt-oss-120b-openrouter',
+                tokensUsed: openRouterResponse.tokensUsed,
+                cost: openRouterResponse.cost,
+              };
+            } else {
+              throw new Error('Both Groq and OpenRouter failed for GPT-OSS 120B');
+            }
+          }
+        } else if (tryModel === 'gemini-2.5-pro' || tryModel === 'gemini-2.5-flash') {
           response = await geminiService.generateContent(prompt, tryModel, systemPrompt);
+        } else {
+          throw new Error(`Unsupported model for text generation: ${tryModel}`);
         }
         
         // Add fallback information
@@ -289,9 +336,9 @@ class UnifiedAIService {
 
   getAvailableModels(): { value: ModelType; label: string; disabled?: boolean }[] {
     return [
-      { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Default)' },
+      { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (Default)' },
+      { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
       { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-      { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (Free OpenAI)' },
       { value: 'gpt-5', label: 'GPT-5 (Coming Soon)', disabled: true },
       { value: 'gemini-2.5-flash-image', label: 'Gemini 2.5 Flash Image (NaNo Banana)' },
     ];

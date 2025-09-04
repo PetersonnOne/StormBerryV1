@@ -9,7 +9,7 @@ const educationRequestSchema = z.object({
   type: z.enum(['text', 'voice', 'image']),
   imageData: z.string().optional(),
   imageUrl: z.string().optional(),
-  model: z.string().default('gemini-2.5-pro'),
+  model: z.string().default('gpt-oss-120b'),
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']).default('intermediate'),
   subject: z.string().optional(),
 })
@@ -49,20 +49,16 @@ Always be encouraging, patient, and supportive. Make learning engaging and inter
     const startTime = Date.now()
 
     if (type === 'image' && (imageData || imageUrl)) {
-      // Handle image-based questions using specified model or Gemini 2.5 Flash Image
-      const imageModel = model.includes('image') ? model : 'gemini-2.5-flash-image'
-      response = await aiService.generateContent(
+      // Handle image-based questions using image generation service
+      response = await aiService.generateImage(
         question,
-        imageModel,
-        systemPrompt,
-        1500,
         imageUrl || imageData
       )
     } else {
       // Handle text/voice questions with selected model
       response = await aiService.generateContent(
         question,
-        model,
+        model as any,
         systemPrompt,
         1500
       )

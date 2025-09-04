@@ -7,8 +7,8 @@ import { z } from 'zod'
 const documentRequestSchema = z.object({
   content: z.string().min(1).max(10000),
   type: z.enum(['contract', 'report', 'email', 'proposal', 'other']).default('other'),
-  analysisType: z.enum(['summary', 'sentiment', 'key-points', 'recommendations', 'full']).default('full'),
-  model: z.string().default('gemini-2.5-pro'),
+  analysisType: z.enum(['summary', 'sentiment', 'key-points', 'recommendations', 'full', 'risk-analysis', 'action-items', 'comprehensive']).default('full'),
+  model: z.string().default('gpt-oss-120b'),
   focusAreas: z.array(z.string()).optional(),
 })
 
@@ -86,7 +86,7 @@ Be thorough, objective, and professional. Focus on actionable insights.`
     const startTime = Date.now()
     const response = await aiService.generateContent(
       prompt,
-      model,
+      model as any,
       systemPrompt,
       2000
     )

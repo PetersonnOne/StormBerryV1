@@ -71,7 +71,7 @@ Guidelines:
     const startTime = Date.now()
     const response = await aiService.generateContent(
       prompt,
-      'gemini-2.5-pro',
+'gpt-oss-120b',
       systemPrompt,
       1500
     )

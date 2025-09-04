@@ -10,7 +10,7 @@ const workflowRequestSchema = z.object({
   complexity: z.enum(['simple', 'moderate', 'complex']).default('moderate'),
   steps: z.array(z.string()).optional(),
   tools: z.array(z.string()).optional(),
-  model: z.string().default('gemini-2.5-pro'),
+  model: z.string().default('gpt-oss-120b'),
 })
 
 export async function POST(request: NextRequest) {
@@ -80,7 +80,7 @@ Focus on:
     const startTime = Date.now()
     const response = await aiService.generateContent(
       prompt,
-      model,
+      model as any,
       systemPrompt,
       2000
     )

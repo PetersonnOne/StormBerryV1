@@ -29,7 +29,16 @@ class GeminiService {
       
       const result = await geminiModel.generateContent(fullPrompt);
       const response = await result.response;
-      const text = response.text();
+      
+      // Handle potential JSON parsing issues
+      let text: string;
+      try {
+        text = response.text();
+      } catch (error) {
+        console.error('Gemini response parsing error:', error);
+        // Try to extract text from response object directly
+        text = response.candidates?.[0]?.content?.parts?.[0]?.text || 'Error: Could not parse response';
+      }
 
       // Estimate token usage (approximate)
       const tokensUsed = Math.ceil((prompt.length + text.length) / 4);

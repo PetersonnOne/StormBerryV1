@@ -77,7 +77,7 @@ Format your response based on summary type:`
     const startTime = Date.now()
     const response = await aiService.generateContent(
       `Please summarize this transcript: ${transcript}`,
-      'gemini-2.5-pro',
+'gpt-oss-120b',
       systemPrompt,
       1500
     )

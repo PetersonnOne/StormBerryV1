@@ -1,19 +1,25 @@
-# 🔑 Required API Keys for Storm Berry V1
+# 🔑 Required API Keys for Storm Berry V1: Consult the .env.example file for the exact API Key entries needed and use it to create either an .env.local or .env for your production deployment needs.
+
+NOTE: Please note that the API Key entries here are for explanation only. Consult the .env.example file for the exact API Key entries needed and use it to create either an .env.local or .env for your production deployment needs.
 
 ## 🚨 **Status: API Keys Already Configured!**
 
 Good news! Your application already has the required API keys configured in `.env.local`:
 
+✅ **Groq API Key** - Configured or OpenAI GPT-OSS Paid this is the first API call for OpenAI GPT-OSS FREE
+✅ **Gemini API Key** - Configured
 ✅ **OpenAI API Key** - Configured  
-✅ **Gemini API Key** - Configured  
+✅ **Gemini API Key** - Configured 
+✅ **OpenRouter API Key** - Configured for OpenAI GPT-OSS FREE and Gemini 2.5 Flash Image
 ✅ **Supabase Database** - Configured  
 ✅ **Clerk Authentication** - Configured  
+n the project the Groq API Key is the first call for GPT-OSS 120B, then the OpenRouter as the second and fall back for the  GPT-OSS 120B only
 
 ## 📋 **Current API Key Status**
 
 ### 1. **OpenAI API Key** ✅ CONFIGURED
 ```env
-OPENAI_API_KEY=fb6e608f6dac43149b9d41f3b0114040
+OPENAI_API_KEY=fb6e608f6dac444149b9d41f3b0114666
 ```
 - **Status**: Active and configured
 - **Used for**: GPT-4, GPT-5 models
@@ -21,7 +27,7 @@ OPENAI_API_KEY=fb6e608f6dac43149b9d41f3b0114040
 
 ### 2. **Google Gemini API Key** ✅ CONFIGURED
 ```env
-GEMINI_API_KEY=AIzaSyB2sYyCHtv7sJpnQGbkdVmKBI68Hx_qWec
+GEMINI_API_KEY=AIzazseesssYyCHtv7sJpnQGbkdVmKBI68Hx_qWeggtc
 ```
 - **Status**: Active and configured
 - **Used for**: Gemini 2.5 Pro, Gemini 2.5 Flash

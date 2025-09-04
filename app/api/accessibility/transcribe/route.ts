@@ -64,7 +64,7 @@ Focus on clarity and accessibility for deaf and hard-of-hearing users.`
 
     const response = await aiService.generateContent(
       `Process this transcription data and format it for accessibility: ${JSON.stringify(mockTranscription)}`,
-      'gemini-2.5-flash', // Use Flash for faster processing
+      'gpt-oss-120b', // Use GPT-OSS as default
       systemPrompt,
       1000
     )

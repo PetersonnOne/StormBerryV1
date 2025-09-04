@@ -78,7 +78,7 @@ export function EnhancedChat() {
             <div className="text-center text-gray-500 mt-8">
               <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Start a conversation with the AI assistant</p>
-              <p className="text-sm mt-2">Default model: Gemini 2.5 Pro with fallback support</p>
+              <p className="text-sm mt-2">Default model: GPT-OSS 120B with fallback support</p>
             </div>
           ) : (
             messages.map((message) => (

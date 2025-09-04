@@ -75,53 +75,49 @@ export default function BillingPage() {
 
         {/* Pro Plan */}
         <Card className="border-2 border-blue-500 shadow-lg relative">
-          <div className="absolute -top-3 left-1//2">
-            <Badg
+          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+            <Badge className="bg-blue-500 text-white">
               Most Popular
             </Badge>
           </div>
-          <CardHeader classN">
-            <div classNameb-4">
-              <Crown class
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Crown className="h-6 w-6 text-blue-600" />
             </div>
-            <CardTitle cle>
-            <div className="te
-              $19<span classNaman>
-        iv>
-            <p classN
-          </CardHeade>
-          <CardContent className="
+            <CardTitle className="text-2xl">Pro</CardTitle>
+            <div className="text-3xl font-bold">
+              $19<span className="text-sm font-normal text-muted-foreground">/month</span>
+            </div>
+            <p className="text-muted-foreground">For power users and professionals</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <ul className="space-y-3">
-              <l-2">
-     />
-   y</span>
- </li>
-          ">
+              <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-500" />
-                <spa>
+                <span className="text-sm">Unlimited AI calls daily</span>
               </li>
               <li className="flex items-center gap-2">
-                <Check cla" />
-             n>
+                <Check className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Premium AI models</span>
               </li>
               <li className="flex items-center gap-2">
-            />
-            </span>
-
-              <li classNamep-2">
-                <Check classN />
-                <spa
+                <Check className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Priority support</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Advanced features</span>
               </li>
             </ul>
             <Button 
-              classNam
-              onClickUpgrade}
-              disable
+              className="w-full"
+              onClick={handleUpgrade}
+              disabled={loading}
             >
-              {loading ? 'Loading...' : '}
+              {loading ? 'Loading...' : 'Upgrade to Pro'}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-          </CardCo>
+          </CardContent>
         </Card>
       </div>
     </div>
