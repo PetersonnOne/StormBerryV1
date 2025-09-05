@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Image } from 'lucide-react';
-import { uploadImage } from '@/utils/storage';
+import { useAuth } from '@clerk/nextjs';
 import ModelSelector from '@/components/ui/model-selector';
 
 interface ImageInputProps {
@@ -18,9 +18,10 @@ export default function ImageInput({ setLoading, onResponse }: ImageInputProps) 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-image');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { getToken } = useAuth();
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,10 +56,16 @@ export default function ImageInput({ setLoading, onResponse }: ImageInputProps) 
     try {
       setLoading(true);
 
-      // Upload to Supabase Storage
-      const imageUrl = await uploadImage(selectedImage, 'education-images');
+      // Convert image to base64 for direct processing
+      const reader = new FileReader();
+      const imageDataPromise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(selectedImage);
+      });
       
-      // Call education API to process the image
+      const imageData = await imageDataPromise;
+      
+      // Call education API to process the image directly
       const response = await fetch('/api/education/ask', {
         method: 'POST',
         headers: {
@@ -67,7 +74,7 @@ export default function ImageInput({ setLoading, onResponse }: ImageInputProps) 
         body: JSON.stringify({
           question: question || 'What do you see in this image? Please explain it in an educational context.',
           type: 'image',
-          imageUrl: imageUrl,
+          imageData: imageData,
           model: selectedModel,
         }),
       });
@@ -79,9 +86,10 @@ export default function ImageInput({ setLoading, onResponse }: ImageInputProps) 
 
       const data = await response.json();
       onResponse(data.answer);
-      setSelectedImage(null);
-      setPreview(null);
-      setQuestion('');
+      // Keep the image and question for user reference - don't clear immediately
+      // setSelectedImage(null);
+      // setPreview(null);
+      // setQuestion('');
       
     } catch (error) {
       console.error('Education image input error:', error);
@@ -102,6 +110,7 @@ export default function ImageInput({ setLoading, onResponse }: ImageInputProps) 
         <ModelSelector
           value={selectedModel}
           onChange={setSelectedModel}
+          includeOnly={['gemini-2.5-pro', 'gemini-2.5-flash']}
         />
       </div>
       

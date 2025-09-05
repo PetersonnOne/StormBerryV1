@@ -8,8 +8,10 @@ const quizRequestSchema = z.object({
   topic: z.string().min(1).max(200),
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']).default('intermediate'),
   questionCount: z.number().min(1).max(20).default(5),
-  questionType: z.enum(['multiple-choice', 'true-false', 'short-answer', 'mixed']).default('mixed'),
+  questionTypes: z.array(z.string()).optional(), // Changed to match frontend
+  questionType: z.enum(['multiple-choice', 'true-false', 'short-answer', 'mixed']).optional(),
   subject: z.string().optional(),
+  model: z.string().default('gemini-2.5-pro'),
 })
 
 export async function POST(request: NextRequest) {
@@ -29,14 +31,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { topic, difficulty, questionCount, questionType, subject } = quizRequestSchema.parse(body)
+    
+    // Add validation to prevent "Invalid request data" error on empty requests
+    if (!body || Object.keys(body).length === 0) {
+      return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
+    }
+    
+    const { topic, difficulty, questionCount, questionTypes, questionType, subject, model } = quizRequestSchema.parse(body)
+    
+    // Use questionTypes if provided, otherwise fall back to questionType
+    const finalQuestionType = questionTypes && questionTypes.length > 0 ? questionTypes[0] : (questionType || 'multiple-choice')
 
     const systemPrompt = `You are an expert quiz creator and educational assessment specialist. Create a comprehensive quiz with the following specifications:
 
 Topic: ${topic}
 Difficulty Level: ${difficulty}
 Number of Questions: ${questionCount}
-Question Type: ${questionType}
+Question Type: ${finalQuestionType}
 ${subject ? `Subject Area: ${subject}` : ''}
 
 IMPORTANT: Return your response as a valid JSON object with this exact structure:
@@ -66,12 +77,12 @@ Guidelines:
 - Appropriate difficulty for ${difficulty} level
 - Focus on understanding, not just memorization`
 
-    const prompt = `Create a ${questionCount}-question ${questionType} quiz on "${topic}" at ${difficulty} level.`
+    const prompt = `Create a ${questionCount}-question ${finalQuestionType} quiz on "${topic}" at ${difficulty} level.`
 
     const startTime = Date.now()
     const response = await aiService.generateContent(
       prompt,
-'gpt-oss-120b',
+      model as any,
       systemPrompt,
       1500
     )

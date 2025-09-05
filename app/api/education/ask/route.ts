@@ -31,6 +31,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    
+    // Add validation to prevent "Invalid request data" error on empty requests
+    if (!body || Object.keys(body).length === 0) {
+      return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
+    }
+    
     const { question, type, imageData, imageUrl, model, difficulty, subject } = educationRequestSchema.parse(body)
 
     // Create educational system prompt
@@ -49,10 +55,14 @@ Always be encouraging, patient, and supportive. Make learning engaging and inter
     const startTime = Date.now()
 
     if (type === 'image' && (imageData || imageUrl)) {
-      // Handle image-based questions using image generation service
-      response = await aiService.generateImage(
-        question,
-        imageUrl || imageData
+      // Handle image-based questions - analyze the image with text generation
+      const imagePrompt = `Analyze this image and answer the following question: ${question}\n\nProvide a detailed educational response based on what you see in the image.`
+      response = await aiService.generateContent(
+        imagePrompt,
+        model as any,
+        systemPrompt,
+        1500,
+        imageData
       )
     } else {
       // Handle text/voice questions with selected model

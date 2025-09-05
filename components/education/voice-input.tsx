@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,14 +17,66 @@ export default function VoiceInput({ setLoading, onResponse }: VoiceInputProps) 
   const [transcript, setTranscript] = useState('');
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
   const { toast } = useToast();
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   useEffect(() => {
     // Initialize voice recognition
     const initVoiceRecognition = async () => {
       try {
-        // TODO: Implement voice recognition setup
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          const recognition = new SpeechRecognition();
+          
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = 'en-US';
+          
+          recognition.onresult = (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const transcript = event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+              } else {
+                interimTranscript += transcript;
+              }
+            }
+            
+            setTranscript(prev => prev + finalTranscript + interimTranscript);
+          };
+          
+          recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            toast({
+              title: 'Speech Recognition Error',
+              description: `Error: ${event.error}`,
+              variant: 'destructive',
+            });
+            setIsRecording(false);
+          };
+          
+          recognition.onend = () => {
+            setIsRecording(false);
+          };
+          
+          recognitionRef.current = recognition;
+        } else {
+          toast({
+            title: 'Speech Recognition Not Supported',
+            description: 'Your browser does not support speech recognition. Please type your question instead.',
+            variant: 'destructive',
+          });
+        }
       } catch (error) {
         console.error('Failed to initialize voice recognition:', error);
+        toast({
+          title: 'Initialization Error',
+          description: 'Failed to initialize speech recognition',
+          variant: 'destructive',
+        });
       }
     };
 
@@ -32,15 +84,33 @@ export default function VoiceInput({ setLoading, onResponse }: VoiceInputProps) 
     
     // Cleanup
     return () => {
-      // TODO: Cleanup voice recognition
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
     };
-  }, []);
+  }, [toast]);
 
   const startRecording = async () => {
     try {
+      if (!recognitionRef.current) {
+        toast({
+          title: 'Error',
+          description: 'Speech recognition not available',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setTranscript(''); // Clear previous transcript
       setIsRecording(true);
-      // TODO: Implement start recording logic
+      recognitionRef.current.start();
+      
+      toast({
+        title: 'Recording Started',
+        description: 'Speak now, your speech will be transcribed',
+      });
     } catch (error) {
+      console.error('Start recording error:', error);
       toast({
         title: 'Error',
         description: 'Failed to start recording',
@@ -52,9 +122,17 @@ export default function VoiceInput({ setLoading, onResponse }: VoiceInputProps) 
 
   const stopRecording = async () => {
     try {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       setIsRecording(false);
-      // TODO: Implement stop recording logic
+      
+      toast({
+        title: 'Recording Stopped',
+        description: 'Processing your speech...',
+      });
     } catch (error) {
+      console.error('Stop recording error:', error);
       toast({
         title: 'Error',
         description: 'Failed to stop recording',
@@ -116,6 +194,7 @@ export default function VoiceInput({ setLoading, onResponse }: VoiceInputProps) 
         <ModelSelector
           value={selectedModel}
           onChange={setSelectedModel}
+          includeOnly={['gemini-2.5-pro', 'gemini-2.5-flash']}
         />
       </div>
       <div className="flex justify-center">
@@ -135,9 +214,8 @@ export default function VoiceInput({ setLoading, onResponse }: VoiceInputProps) 
       <Textarea
         value={transcript}
         onChange={(e) => setTranscript(e.target.value)}
-        placeholder="Your speech will appear here..."
+        placeholder="Your speech will appear here... (You can also type directly)"
         className="min-h-[100px]"
-        readOnly
       />
 
       <Button

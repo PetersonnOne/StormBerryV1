@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+// import { Redis } from '@upstash/redis';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || ''
-});
+// Disable Redis for now to prevent build errors
+// const redis = new Redis({
+//   url: process.env.UPSTASH_REDIS_REST_URL!,
+//   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+// });
 
 const CACHE_TTL = 3600; // 1 hour in seconds
 
@@ -41,11 +43,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
     }
 
-    // Check cache first
-    const cachedData = await redis.get(`timezone:${query}`);
-    if (cachedData) {
-      return NextResponse.json(cachedData);
-    }
+    // Check cache first (disabled)
+    // const cachedData = await redis.get(`timezone:${query}`);
+    // if (cachedData) {
+    //   return NextResponse.json(cachedData);
+    // }
 
     // Fetch from primary API
     let data;
@@ -60,8 +62,8 @@ export async function GET(request: Request) {
       }
     }
 
-    // Cache the result
-    await redis.set(`timezone:${query}`, data, { ex: CACHE_TTL });
+    // Cache the result (disabled)
+    // await redis.set(`timezone:${query}`, data, { ex: CACHE_TTL });
 
     return NextResponse.json(data);
   } catch (error) {
@@ -81,12 +83,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check cache
-    const cacheKey = `conversion:${datetime}:${fromZone}:${toZone}`;
-    const cachedResult = await redis.get(cacheKey);
-    if (cachedResult) {
-      return NextResponse.json(cachedResult);
-    }
+    // Check cache (disabled)
+    // const cacheKey = `conversion:${datetime}:${fromZone}:${toZone}`;
+    // const cachedResult = await redis.get(cacheKey);
+    // if (cachedResult) {
+    //   return NextResponse.json(cachedResult);
+    // }
 
     // Perform conversion
     let result;
@@ -97,8 +99,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Conversion failed' }, { status: 500 });
     }
 
-    // Cache the result
-    await redis.set(cacheKey, result, { ex: CACHE_TTL });
+    // Cache the result (disabled)
+    // await redis.set(cacheKey, result, { ex: CACHE_TTL });
 
     return NextResponse.json(result);
   } catch (error) {

@@ -59,6 +59,56 @@ class GeminiService {
     }
   }
 
+  async analyzeImage(
+    imageData: string,
+    prompt: string,
+    model: 'gemini-2.5-flash' | 'gemini-2.5-pro'
+  ): Promise<AIResponse> {
+    try {
+      const modelName = model === 'gemini-2.5-flash' ? 'gemini-1.5-flash' : 'gemini-1.5-pro';
+      const geminiModel = this.genAI.getGenerativeModel({ model: modelName });
+
+      // Convert base64 to proper format for Gemini
+      const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      const imagePart = {
+        inlineData: {
+          data: base64Data,
+          mimeType: 'image/jpeg' // Default to JPEG, could be enhanced to detect actual type
+        }
+      };
+
+      const result = await geminiModel.generateContent([prompt, imagePart]);
+      const response = await result.response;
+      
+      // Handle potential JSON parsing issues
+      let text: string;
+      try {
+        text = response.text();
+      } catch (error) {
+        console.error('Gemini image response parsing error:', error);
+        text = response.candidates?.[0]?.content?.parts?.[0]?.text || 'Error: Could not parse image response';
+      }
+
+      // Estimate token usage (approximate)
+      const tokensUsed = Math.ceil((prompt.length + text.length) / 4);
+      
+      // Estimate cost based on model (higher cost for image analysis)
+      const costPerToken = model === 'gemini-2.5-flash' ? 0.000002 : 0.000010;
+      const cost = tokensUsed * costPerToken;
+
+      return {
+        content: text,
+        model,
+        tokensUsed,
+        cost,
+      };
+    } catch (error) {
+      console.error(`Gemini ${model} image analysis error:`, error);
+      throw new Error(`Failed to analyze image with ${model}: ${error}`);
+    }
+  }
+
   async generateContentWithFallback(
     prompt: string,
     preferredModel: ModelType,

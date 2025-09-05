@@ -32,9 +32,15 @@ export default function QuizSection() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Disable quiz functionality for now
+  const isDisabled = true;
+
   useEffect(() => {
-    loadQuizQuestions();
-  }, []);
+    // Don't load quiz questions when disabled
+    if (!isDisabled) {
+      loadQuizQuestions();
+    }
+  }, [isDisabled]);
 
   const loadQuizQuestions = async () => {
     try {
@@ -123,13 +129,15 @@ export default function QuizSection() {
     );
   }
 
-  if (quizState.questions.length === 0) {
+  if (isDisabled || quizState.questions.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No quiz questions available.</p>
+        <p className="text-gray-500">Practice Quiz</p>
+        <p className="text-sm text-gray-400 mt-2">Coming Soon</p>
         <Button
           onClick={loadQuizQuestions}
           className="mt-4"
+          disabled={isDisabled}
         >
           Generate New Quiz
         </Button>
@@ -151,6 +159,7 @@ export default function QuizSection() {
           variant="outline"
           size="sm"
           onClick={loadQuizQuestions}
+          disabled={isDisabled}
         >
           New Quiz
         </Button>

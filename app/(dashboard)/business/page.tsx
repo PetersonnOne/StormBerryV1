@@ -2,6 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { PageLoading } from '@/components/ui/page-loading';
+import { PDFReportGenerator } from '@/components/business/pdf-report-generator';
+import { PDFAnnotator } from '@/components/business/pdf-annotator';
+import { PDFAnalyzer } from '@/components/business/pdf-analyzer';
+import { PDFAssembler } from '@/components/business/pdf-assembler';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const BusinessPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,23 +43,31 @@ const BusinessPage = () => {
         </div>
       </div>
       
-      <div className="min-h-screen bg-background text-foreground">
-        {/* Add Business & Productivity specific content here */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-card text-card-foreground p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold mb-2">Workflow Builder</h3>
-            <p className="text-muted-foreground">Create automated workflows with drag-and-drop interface</p>
-          </div>
-          <div className="bg-card text-card-foreground p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold mb-2">Document Analysis</h3>
-            <p className="text-muted-foreground">AI-powered analysis of contracts and proposals</p>
-          </div>
-          <div className="bg-card text-card-foreground p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold mb-2">Meeting Summarizer</h3>
-            <p className="text-muted-foreground">Generate summaries and action items from transcripts</p>
-          </div>
-        </div>
-      </div>
+      {/* PDF Tools Tabs */}
+      <Tabs defaultValue="generate" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="generate">Generate PDF Report</TabsTrigger>
+          <TabsTrigger value="annotate">Annotate PDF</TabsTrigger>
+          <TabsTrigger value="analyze">Analyze PDF</TabsTrigger>
+          <TabsTrigger value="assemble">Assemble PDF</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="generate" className="mt-6">
+          <PDFReportGenerator />
+        </TabsContent>
+        
+        <TabsContent value="annotate" className="mt-6">
+          <PDFAnnotator />
+        </TabsContent>
+        
+        <TabsContent value="analyze" className="mt-6">
+          <PDFAnalyzer />
+        </TabsContent>
+        
+        <TabsContent value="assemble" className="mt-6">
+          <PDFAssembler />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

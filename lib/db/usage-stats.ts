@@ -37,6 +37,17 @@ interface UsageData {
 class UsageStatsService {
   async recordUsage(userId: string, data: UsageData): Promise<void> {
     try {
+      // Temporarily disable usage recording due to RLS policy issues
+      // TODO: Fix Supabase RLS policies or implement service role key
+      console.log('Usage recording disabled - would record:', {
+        user_id: userId,
+        tokens_used: data.tokensUsed,
+        cost: data.cost,
+        model: data.model,
+        interaction_type: data.interactionType
+      });
+      return;
+      
       const { error } = await supabase
         .from('usage_stats')
         .insert({
@@ -56,7 +67,8 @@ class UsageStatsService {
       }
     } catch (error) {
       console.error('Failed to record usage:', error);
-      throw error;
+      // Don't throw error to prevent blocking AI operations
+      return;
     }
   }
 
