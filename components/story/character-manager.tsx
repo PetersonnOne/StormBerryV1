@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import ModelSelector from '@/components/ui/model-selector';
 
 type Character = {
   id: string;
@@ -29,6 +30,7 @@ export function CharacterManager() {
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
 
   const saveCharacters = useCallback(async () => {
     try {
@@ -62,6 +64,7 @@ export function CharacterManager() {
           name: character.name,
           role: character.role,
           existingCharacters: characters.filter(c => c.id !== characterId),
+          model: selectedModel,
         }),
       });
 
@@ -259,6 +262,14 @@ export function CharacterManager() {
                         value={character.role}
                         onChange={(e) => updateCharacter(character.id, { role: e.target.value })}
                       />
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">AI Model:</span>
+                        <ModelSelector
+                          value={selectedModel}
+                          onChange={setSelectedModel}
+                        />
+                      </div>
                     </div>
 
                     <div className="ml-4 flex flex-col space-y-2">

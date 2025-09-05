@@ -89,7 +89,9 @@ Format the response as structured text with clear section headers.`
       watermark
     }
 
+    console.log('Generating PDF with options:', pdfOptions);
     const pdfBuffer = await foxitService.generatePDFReport(pdfOptions)
+    console.log('PDF generated successfully, buffer length:', pdfBuffer.length);
 
     // Record usage
     await usageStatsService.recordUsage(userId, {

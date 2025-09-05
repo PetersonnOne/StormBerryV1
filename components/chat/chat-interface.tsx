@@ -21,6 +21,8 @@ import {
 import { cn, copyToClipboard } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
 import dynamic from 'next/dynamic'
+import { ExportButton } from '@/components/ui/export-button'
+import { ExportableContent } from '@/lib/export-utils'
 
 // Dynamically import heavy components
 const ReactMarkdown = dynamic(() => import('react-markdown'), {
@@ -165,6 +167,23 @@ export function ChatInterface() {
     })
   }
 
+  const prepareExportData = (): ExportableContent => {
+    return {
+      title: 'Storm Berry Chat Conversation',
+      messages: messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp
+      })),
+      metadata: {
+        exportDate: new Date(),
+        module: 'Chat',
+        model: selectedModel,
+        messageCount: messages.length
+      }
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -185,6 +204,10 @@ export function ChatInterface() {
           <ModelSelector
             value={selectedModel}
             onValueChange={setSelectedModel}
+          />
+          <ExportButton 
+            data={prepareExportData()} 
+            filename={`storm-berry-chat-${new Date().toISOString().split('T')[0]}`}
           />
           <Button variant="ghost" size="sm">
             <Settings className="h-4 w-4" />

@@ -87,9 +87,9 @@ export default function AccessibilityPage() {
       <Tabs defaultValue="transcription" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-8">
           <TabsTrigger value="transcription">Live Transcription</TabsTrigger>
-          <TabsTrigger value="sign-language">Sign Language</TabsTrigger>
-          <TabsTrigger value="history">Conversation History</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="sign-language" disabled className="opacity-50 cursor-not-allowed">Sign Language (Coming Soon)</TabsTrigger>
+          <TabsTrigger value="history" disabled className="opacity-50 cursor-not-allowed">Conversation History (Coming Soon)</TabsTrigger>
+          <TabsTrigger value="settings" disabled className="opacity-50 cursor-not-allowed">Settings (Coming Soon)</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transcription" className="space-y-4">

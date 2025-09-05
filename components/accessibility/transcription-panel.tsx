@@ -20,7 +20,7 @@ interface Highlight {
   color: string;
 }
 
-type VoiceMode = 'browser' | 'ai-ml' | 'elevenlabs';
+type VoiceMode = 'elevenlabs';
 
 export default function TranscriptionPanel({ isOfflineMode, fontSize }: TranscriptionPanelProps) {
   const { user } = useUser();
@@ -39,79 +39,140 @@ export default function TranscriptionPanel({ isOfflineMode, fontSize }: Transcri
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize WebSocket connection for real-time transcription
-    if (!isOfflineMode && isListening && voiceMode === 'ai-ml') {
-      const ws = new WebSocket('wss://api.aimlapi.com/eleven-labs/speech-to-text');
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        ws.send(JSON.stringify({
-          action: 'start',
-          language: selectedLanguage,
-          apiKey: process.env.NEXT_PUBLIC_AIML_API_KEY
-        }));
-      };
+    // Initialize speech recognition when listening starts
+    if (isListening) {
+      if (!isOfflineMode && voiceMode === 'ai-ml') {
+        // Use AI-ML WebSocket for real-time transcription
+        const ws = new WebSocket('wss://api.aimlapi.com/eleven-labs/speech-to-text');
+        
+        ws.onopen = () => {
+          console.log('WebSocket connected');
+          ws.send(JSON.stringify({
+            action: 'start',
+            language: selectedLanguage,
+            apiKey: process.env.NEXT_PUBLIC_AIML_API_KEY
+          }));
+        };
 
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.transcript) {
-          setTranscript(prev => prev + ' ' + data.transcript);
-        }
-      };
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.transcript) {
+            setTranscript(prev => prev + ' ' + data.transcript);
+          }
+        };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          toast.error('AI-ML connection failed, switching to browser mode');
+          fallbackToOfflineMode();
+        };
+
+        webSocketRef.current = ws;
+
+        return () => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.close();
+          }
+        };
+      } else {
+        // Use browser's built-in speech recognition or ElevenLabs
         fallbackToOfflineMode();
-      };
-
-      webSocketRef.current = ws;
-
-      return () => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.close();
-        }
-      };
-    } else if ((isOfflineMode || voiceMode === 'browser') && isListening) {
-      fallbackToOfflineMode();
+      }
     }
   }, [isListening, isOfflineMode, selectedLanguage, voiceMode]);
 
   const fallbackToOfflineMode = () => {
-    if (!('webkitSpeechRecognition' in window)) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       toast.error('Speech recognition is not supported in this browser.');
+      setIsListening(false);
       return;
     }
 
-    const SpeechRecognition = window.webkitSpeechRecognition;
+    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = selectedLanguage;
 
+    recognition.onstart = () => {
+      console.log('Speech recognition started');
+      toast.success('Listening... Speak now');
+    };
+
     recognition.onresult = (event: any) => {
-      const last = event.results.length - 1;
-      const text = event.results[last][0].transcript;
-      setTranscript(prev => prev + ' ' + text);
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        setTranscript(prev => prev + finalTranscript);
+      }
     };
 
     recognition.onerror = (event: any) => {
       console.error('Recognition error:', event.error);
       setIsListening(false);
-      toast.error('Speech recognition failed');
+      
+      switch (event.error) {
+        case 'no-speech':
+          toast.error('No speech detected. Please try again.');
+          break;
+        case 'audio-capture':
+          toast.error('Microphone not accessible. Please check permissions.');
+          break;
+        case 'not-allowed':
+          toast.error('Microphone access denied. Please allow microphone access.');
+          break;
+        default:
+          toast.error(`Speech recognition failed: ${event.error}`);
+      }
     };
 
-    recognition.start();
-    recognitionRef.current = recognition;
+    recognition.onend = () => {
+      console.log('Speech recognition ended');
+      if (isListening) {
+        // Restart recognition if still listening
+        setTimeout(() => {
+          if (isListening) {
+            recognition.start();
+          }
+        }, 100);
+      }
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      toast.info('Starting speech recognition...');
+    } catch (error) {
+      console.error('Failed to start recognition:', error);
+      toast.error('Failed to start speech recognition');
+      setIsListening(false);
+    }
   };
 
   const toggleListening = () => {
     if (isListening) {
+      // Stop listening
       if (webSocketRef.current?.readyState === WebSocket.OPEN) {
         webSocketRef.current.close();
       }
       if (recognitionRef.current) {
         recognitionRef.current.stop();
+        recognitionRef.current = null;
       }
+      toast.info('Stopped listening');
+    } else {
+      // Start listening
+      toast.info('Preparing to listen...');
     }
     setIsListening(!isListening);
   };
@@ -395,8 +456,6 @@ export default function TranscriptionPanel({ isOfflineMode, fontSize }: Transcri
                   className="px-3 py-2 border rounded-md"
                 >
                   <option value="elevenlabs">ElevenLabs (Premium)</option>
-                  <option value="ai-ml">AI-ML API</option>
-                  <option value="browser">Browser (Offline)</option>
                 </select>
 
                 <select
@@ -522,8 +581,6 @@ export default function TranscriptionPanel({ isOfflineMode, fontSize }: Transcri
                     className="px-3 py-2 border rounded-md"
                   >
                     <option value="elevenlabs">ElevenLabs (Premium)</option>
-                    <option value="ai-ml">AI-ML API</option>
-                    <option value="browser">Browser (Offline)</option>
                   </select>
 
                   <select

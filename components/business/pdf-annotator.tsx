@@ -125,6 +125,8 @@ export function PDFAnnotator() {
         </CardTitle>
         <CardDescription>
           Upload a PDF to automatically highlight key phrases, add AI-generated comments, and insert headers or watermarks.
+          <br />
+          <strong>📥 Result:</strong> The annotated PDF will automatically download with "annotated_" prefix in the filename.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

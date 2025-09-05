@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
-import { ModelSelector } from '@/components/ui/model-selector';
+import ModelSelector from '@/components/ui/model-selector';
 import { OperationLoading } from '@/components/ui/page-loading';
 import { FileText, Download, Sparkles } from 'lucide-react';
 
@@ -83,6 +83,11 @@ export function PDFReportGenerator() {
       setWatermark('');
     } catch (error) {
       console.error('Error generating PDF report:', error);
+      console.error('Full error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        response: error
+      });
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to generate PDF report',
@@ -106,6 +111,8 @@ export function PDFReportGenerator() {
         </CardTitle>
         <CardDescription>
           Create professional PDF reports with AI-generated content, formatted with cover pages, table of contents, and professional styling.
+          <br />
+          <strong>📥 Result:</strong> Your PDF will automatically download to your browser's default download folder when ready.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

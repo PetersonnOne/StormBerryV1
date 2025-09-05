@@ -306,11 +306,20 @@ export class FoxitService {
   }
 
   private async addMainContent(pdfDoc: PDFDocument, content: string, boldFont: any, font: any) {
-    const page = pdfDoc.addPage([612, 792]);
-    const { width, height } = page.getSize();
+    let currentPage = pdfDoc.addPage([612, 792]);
+    const { width, height } = currentPage.getSize();
+
+    // Clean content to remove problematic characters
+    const cleanContent = content
+      .replace(/\r\n/g, ' ')  // Replace Windows line endings
+      .replace(/\n/g, ' ')    // Replace Unix line endings
+      .replace(/\r/g, ' ')    // Replace Mac line endings
+      .replace(/[^\x20-\x7E]/g, ' ')  // Replace non-ASCII characters with spaces
+      .replace(/\s+/g, ' ')   // Replace multiple spaces with single space
+      .trim();
 
     // Split content into paragraphs and add to page
-    const paragraphs = content.split('\n\n');
+    const paragraphs = cleanContent.split('. ').filter(p => p.trim().length > 0);
     let yPosition = height - 100;
     const lineHeight = 15;
     const maxWidth = width - 100;
@@ -318,19 +327,121 @@ export class FoxitService {
     for (const paragraph of paragraphs) {
       if (yPosition < 100) {
         // Add new page if needed
-        const newPage = pdfDoc.addPage([612, 792]);
+        currentPage = pdfDoc.addPage([612, 792]);
         yPosition = height - 100;
       }
 
       // Simple text wrapping
-      const words = paragraph.split(' ');
+      const words = paragraph.split(' ').filter(w => w.trim().length > 0);
       let line = '';
       
       for (const word of words) {
-        const testLine = line + (line ? ' ' : '') + word;
-        const textWidth = font.widthOfTextAtSize(testLine, 12);
+        const cleanWord = word.replace(/[^\x20-\x7E]/g, ''); // Clean individual words
+        const testLine = line + (line ? ' ' : '') + cleanWord;
         
-        if (textWidth > maxWidth && line) {
+        try {
+          const textWidth = font.widthOfTextAtSize(testLine, 12);
+          
+          if (textWidth > maxWidth && line) {
+            currentPage.drawText(line, {
+              x: 50,
+              y: yPosition,
+              size: 12,
+              font,
+              color: rgb(0, 0, 0),
+            });
+            yPosition -= lineHeight;
+            line = cleanWord;
+          } else {
+            line = testLine;
+          }
+        } catch (error) {
+          console.warn('Skipping problematic text:', testLine);
+          continue;
+        }
+      }
+      
+      if (line.trim()) {
+        try {
+          currentPage.drawText(line, {
+            x: 50,
+            y: yPosition,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+          });
+          yPosition -= lineHeight * 1.5; // Extra space between paragraphs
+        } catch (error) {
+          console.warn('Skipping problematic line:', line);
+        }
+      }
+    }
+  }
+
+  private async addSection(pdfDoc: PDFDocument, title: string, content: string, boldFont: any, font: any) {
+    const page = pdfDoc.addPage([612, 792]);
+    const { width, height } = page.getSize();
+
+    // Clean title
+    const cleanTitle = title.replace(/[^\x20-\x7E]/g, ' ').trim();
+
+    // Section title
+    page.drawText(cleanTitle, {
+      x: 50,
+      y: height - 100,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+
+    // Clean and process content similar to addMainContent
+    const cleanContent = content
+      .replace(/\r\n/g, ' ')
+      .replace(/\n/g, ' ')
+      .replace(/\r/g, ' ')
+      .replace(/[^\x20-\x7E]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const sentences = cleanContent.split('. ').filter(s => s.trim().length > 0);
+    let yPosition = height - 140;
+    const lineHeight = 18;
+    const maxWidth = width - 100;
+    
+    for (const sentence of sentences) {
+      if (yPosition < 50) break; // Stop if we run out of space
+      
+      const words = sentence.split(' ').filter(w => w.trim().length > 0);
+      let line = '';
+      
+      for (const word of words) {
+        const cleanWord = word.replace(/[^\x20-\x7E]/g, '');
+        const testLine = line + (line ? ' ' : '') + cleanWord;
+        
+        try {
+          const textWidth = font.widthOfTextAtSize(testLine, 12);
+          
+          if (textWidth > maxWidth && line) {
+            page.drawText(line, {
+              x: 50,
+              y: yPosition,
+              size: 12,
+              font,
+              color: rgb(0, 0, 0),
+            });
+            yPosition -= lineHeight;
+            line = cleanWord;
+          } else {
+            line = testLine;
+          }
+        } catch (error) {
+          console.warn('Skipping problematic text in section:', testLine);
+          continue;
+        }
+      }
+      
+      if (line.trim()) {
+        try {
           page.drawText(line, {
             x: 50,
             y: yPosition,
@@ -339,51 +450,10 @@ export class FoxitService {
             color: rgb(0, 0, 0),
           });
           yPosition -= lineHeight;
-          line = word;
-        } else {
-          line = testLine;
+        } catch (error) {
+          console.warn('Skipping problematic line in section:', line);
         }
       }
-      
-      if (line) {
-        page.drawText(line, {
-          x: 50,
-          y: yPosition,
-          size: 12,
-          font,
-          color: rgb(0, 0, 0),
-        });
-        yPosition -= lineHeight * 1.5; // Extra space between paragraphs
-      }
-    }
-  }
-
-  private async addSection(pdfDoc: PDFDocument, title: string, content: string, boldFont: any, font: any) {
-    const page = pdfDoc.addPage([612, 792]);
-    const { height } = page.getSize();
-
-    // Section title
-    page.drawText(title, {
-      x: 50,
-      y: height - 100,
-      size: 16,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-
-    // Section content
-    const paragraphs = content.split('\n\n');
-    let yPosition = height - 140;
-    
-    for (const paragraph of paragraphs) {
-      page.drawText(paragraph, {
-        x: 50,
-        y: yPosition,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      yPosition -= 20;
     }
   }
 

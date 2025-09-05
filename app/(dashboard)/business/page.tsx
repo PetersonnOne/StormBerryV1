@@ -27,7 +27,10 @@ const BusinessPage = () => {
     <div className="p-6">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-blue-600 rounded-2xl p-8 text-white mb-8">
-        <h1 className="text-4xl font-bold mb-4">Business & Productivity Module</h1>
+        <h1 className="text-4xl font-bold mb-4">
+          Business & Productivity Module 
+          <span className="text-purple-200 opacity-80 font-normal"> | Powered by https://www.foxit.com API's</span>
+        </h1>
         <p className="text-xl mb-6 opacity-90">
           Streamline your workflow and enhance your productivity with our AI-powered tools.
         </p>

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
-import { ModelSelector } from '@/components/ui/model-selector';
+import ModelSelector from '@/components/ui/model-selector';
 import { OperationLoading } from '@/components/ui/page-loading';
 import { FileStack, Plus, Trash2, Download, Sparkles } from 'lucide-react';
 
@@ -178,6 +178,8 @@ export function PDFAssembler() {
         </CardTitle>
         <CardDescription>
           Create a comprehensive PDF document by combining AI-generated content with professional formatting and structure.
+          <br />
+          <strong>📥 Result:</strong> The assembled PDF will automatically download with your specified document title as the filename.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -11,12 +11,27 @@ import LessonView from '@/components/education/lesson-view';
 import QuizSection from '@/components/education/quiz-section';
 import { Toaster } from '@/components/ui/toaster';
 import { PageLoading, OperationLoading } from '@/components/ui/page-loading';
+import { ExportButton } from '@/components/ui/export-button';
+import { ExportableContent } from '@/lib/export-utils';
 
 export default function EducationModule() {
   const [activeTab, setActiveTab] = useState('text');
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<string>('');
   const [isPageLoading, setIsPageLoading] = useState(true);
+
+  const prepareExportData = (): ExportableContent => {
+    return {
+      title: 'Storm Berry Education Session',
+      content: response || 'No AI response available yet.',
+      metadata: {
+        exportDate: new Date(),
+        module: 'Education',
+        inputMethod: activeTab,
+        hasContent: !!response
+      }
+    }
+  }
 
   useEffect(() => {
     // Simulate initial page loading
@@ -66,12 +81,23 @@ export default function EducationModule() {
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-2xl font-semibold mb-4">AI Response</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">AI Response</h2>
+            {response && (
+              <div className="flex flex-col items-center gap-1">
+                <ExportButton 
+                  data={prepareExportData()} 
+                  filename={`storm-berry-education-${new Date().toISOString().split('T')[0]}`}
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">Export/Download</span>
+              </div>
+            )}
+          </div>
           {loading ? (
             <OperationLoading message="Generating AI response..." />
           ) : response ? (
-            <div className="prose prose-sm max-w-none p-4 bg-gray-50 rounded-lg">
-              <div className="whitespace-pre-wrap">{response}</div>
+            <div className="prose prose-sm max-w-none p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="whitespace-pre-wrap text-gray-900 dark:text-gray-100">{response}</div>
             </div>
           ) : (
             <div className="flex items-center justify-center h-32 text-gray-500">

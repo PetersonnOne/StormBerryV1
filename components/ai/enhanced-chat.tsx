@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Send, Bot, User } from 'lucide-react'
 import { useAIWithStatus } from '@/hooks/useAIWithStatus'
 import { AIStatusModal } from '@/components/ui/ai-status-modal'
+import { ExportButton } from '@/components/ui/export-button'
+import { ExportableContent } from '@/lib/export-utils'
 
 interface Message {
   id: string
@@ -70,9 +72,35 @@ export function EnhancedChat() {
     }
   }
 
+  const prepareExportData = (): ExportableContent => {
+    return {
+      title: 'Storm Berry Chat Conversation',
+      messages: messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp
+      })),
+      metadata: {
+        exportDate: new Date(),
+        module: 'Chat',
+        messageCount: messages.length
+      }
+    }
+  }
+
   return (
     <div className="flex flex-col h-[600px] w-full">
       <Card className="flex-1 p-4 overflow-hidden flex flex-col">
+        {/* Header with Export Button */}
+        <div className="flex justify-between items-center mb-4 pb-2 border-b">
+          <h3 className="text-lg font-semibold">Chat Conversation</h3>
+          {messages.length > 0 && (
+            <ExportButton 
+              onExport={prepareExportData}
+              filename="storm-berry-chat"
+            />
+          )}
+        </div>
         <div className="flex-1 overflow-y-auto space-y-4 mb-4">
           {messages.length === 0 ? (
             <div className="text-center text-gray-500 mt-8">

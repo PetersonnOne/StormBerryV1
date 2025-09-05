@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import ModelSelector from '@/components/ui/model-selector';
 
 type Location = {
   id: string;
@@ -38,20 +39,65 @@ export function WorldBuilder() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
 
-  const saveWorld = useCallback(async () => {
+  const exportWorldAsDoc = useCallback(() => {
+    if (!worldData.name.trim()) {
+      toast.error('World name is required for export');
+      return;
+    }
+
     try {
-      const response = await fetch('/api/story/save-world', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(worldData),
-      });
+      // Create document content
+      const worldName = worldData.name || 'Untitled World';
+      
+      let docContent = `${worldName}\n\n`;
+      
+      if (worldData.description) {
+        docContent += `Description:\n${worldData.description}\n\n`;
+      }
+      
+      if (worldData.history) {
+        docContent += `History:\n${worldData.history}\n\n`;
+      }
+      
+      if (worldData.magicSystem) {
+        docContent += `Magic System:\n${worldData.magicSystem}\n\n`;
+      }
+      
+      if (worldData.technology) {
+        docContent += `Technology:\n${worldData.technology}\n\n`;
+      }
+      
+      if (worldData.locations.length > 0) {
+        docContent += `Locations:\n\n`;
+        worldData.locations.forEach((location, index) => {
+          docContent += `${index + 1}. ${location.name || 'Unnamed Location'}\n`;
+          if (location.description) docContent += `   Description: ${location.description}\n`;
+          if (location.climate) docContent += `   Climate: ${location.climate}\n`;
+          if (location.culture) docContent += `   Culture: ${location.culture}\n`;
+          if (location.landmarks && location.landmarks.length > 0) {
+            docContent += `   Landmarks: ${location.landmarks.join(', ')}\n`;
+          }
+          docContent += '\n';
+        });
+      }
 
-      if (!response.ok) throw new Error('Failed to save world data');
-      toast.success('World data saved successfully');
+      // Create and download file
+      const blob = new Blob([docContent], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${worldName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_world.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('World data exported successfully');
     } catch (error) {
-      console.error('Error saving world:', error);
-      toast.error('Failed to save world data');
+      console.error('Error exporting world:', error);
+      toast.error('Failed to export world data');
     }
   }, [worldData]);
 
@@ -64,6 +110,7 @@ export function WorldBuilder() {
         body: JSON.stringify({
           name: worldData.name,
           description: worldData.description,
+          model: selectedModel,
         }),
       });
 
@@ -84,7 +131,7 @@ export function WorldBuilder() {
     } finally {
       setIsGenerating(false);
     }
-  }, [worldData.name, worldData.description]);
+  }, [worldData.name, worldData.description, selectedModel]);
 
   const addLocation = () => {
     const newLocation: Location = {
@@ -139,10 +186,18 @@ export function WorldBuilder() {
               rows={4}
             />
 
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm font-medium">AI Model:</span>
+              <ModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+              />
+            </div>
+
             <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
-                onClick={saveWorld}
+                onClick={exportWorldAsDoc}
               >
                 Save World
               </Button>
@@ -172,7 +227,6 @@ export function WorldBuilder() {
               value={worldData.history}
               onChange={(e) => setWorldData(prev => ({ ...prev, history: e.target.value }))}
               rows={4}
-              label="History"
             />
 
             <Textarea
@@ -180,7 +234,6 @@ export function WorldBuilder() {
               value={worldData.magicSystem}
               onChange={(e) => setWorldData(prev => ({ ...prev, magicSystem: e.target.value }))}
               rows={3}
-              label="Magic System"
             />
 
             <Textarea
@@ -188,7 +241,6 @@ export function WorldBuilder() {
               value={worldData.technology}
               onChange={(e) => setWorldData(prev => ({ ...prev, technology: e.target.value }))}
               rows={3}
-              label="Technology"
             />
           </div>
         </Card>

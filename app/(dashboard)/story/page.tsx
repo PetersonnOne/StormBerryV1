@@ -51,7 +51,7 @@ export default function StoryPage() {
           <TabsTrigger value="editor">Story Editor</TabsTrigger>
           <TabsTrigger value="world">World Builder</TabsTrigger>
           <TabsTrigger value="characters">Characters</TabsTrigger>
-          <TabsTrigger value="export">Export Story</TabsTrigger>
+          <TabsTrigger value="export" disabled className="opacity-50 cursor-not-allowed">Export Story</TabsTrigger>
         </TabsList>
 
         <TabsContent value="editor" className="space-y-4">

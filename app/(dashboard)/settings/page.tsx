@@ -195,16 +195,16 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
           <Settings className="h-8 w-8" />
-          Settings
+          Settings - Coming Soon
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Manage your account settings and preferences
         </p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 pointer-events-none opacity-50 select-none">
         {/* Usage Statistics */}
         {usage && (
           <Card>

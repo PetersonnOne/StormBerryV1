@@ -15,7 +15,7 @@ interface ModelSelectorProps {
   className?: string;
 }
 
-export function ModelSelector({ selectedModel, onModelChange, value, onValueChange, onChange, disabled, excludeModels, includeOnly, className }: ModelSelectorProps) {
+export default function ModelSelector({ selectedModel, onModelChange, value, onValueChange, onChange, disabled, excludeModels, includeOnly, className }: ModelSelectorProps) {
   let models = aiService.getAvailableModels();
   
   // Filter models based on includeOnly or excludeModels

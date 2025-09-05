@@ -50,8 +50,49 @@ export function StoryEditor() {
     }
   }, [storyMetadata]);
 
-  const generateSuggestions = useCallback(async () => {
+  const exportStoryAsDoc = useCallback(() => {
     if (!editor?.getHTML()) {
+      toast.error('No content to export');
+      return;
+    }
+
+    try {
+      // Create document content
+      const title = storyMetadata.title || 'Untitled Story';
+      const content = editor.getText();
+      const genre = storyMetadata.genre || 'General';
+      const synopsis = storyMetadata.synopsis || 'No synopsis provided';
+      
+      const docContent = `${title}
+
+Genre: ${genre}
+
+Synopsis:
+${synopsis}
+
+Story Content:
+${content}`;
+
+      // Create and download file
+      const blob = new Blob([docContent], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_story.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Story exported successfully');
+    } catch (error) {
+      console.error('Error exporting story:', error);
+      toast.error('Failed to export story');
+    }
+  }, [editor, storyMetadata]);
+
+  const generateSuggestions = useCallback(async () => {
+    if (!editor?.getText()?.trim()) {
       toast.error('Please write some content first');
       return;
     }
@@ -80,13 +121,14 @@ export function StoryEditor() {
 
       const data = await response.json();
       setSuggestions(data.story);
+      toast.success('AI suggestions generated successfully');
     } catch (error) {
       console.error('Error generating suggestions:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to generate suggestions');
     } finally {
       setIsGenerating(false);
     }
-  }, [editor, storyMetadata]);
+  }, [editor, storyMetadata, selectedModel]);
 
   const applySuggestion = useCallback(() => {
     if (editor && suggestions) {
@@ -140,7 +182,7 @@ export function StoryEditor() {
           <div className="flex space-x-2">
             <Button
               variant="outline"
-              onClick={() => saveContent(editor.getHTML())}
+              onClick={exportStoryAsDoc}
             >
               Save Draft
             </Button>

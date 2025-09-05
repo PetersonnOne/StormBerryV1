@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import OpenAI from 'openai';
+import { aiService } from '@/lib/ai/unified-ai-service';
+import { usageStatsService } from '@/lib/db/usage-stats';
+import { z } from 'zod';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const characterRequestSchema = z.object({
+  name: z.string().min(1).max(100),
+  role: z.string().optional(),
+  existingCharacters: z.array(z.object({
+    name: z.string(),
+    role: z.string(),
+    description: z.string()
+  })).optional(),
+  model: z.string().default('gemini-2.5-pro'),
+});
 
 export async function POST(req: Request) {
   try {
@@ -11,36 +22,59 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, role, existingCharacters } = await req.json();
-    if (!name) {
-      return NextResponse.json({ error: 'Character name is required' }, { status: 400 });
+    // Check rate limits
+    const rateLimit = await usageStatsService.checkRateLimit(userId);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ 
+        error: 'Rate limit exceeded',
+        remainingTokens: rateLimit.remainingTokens 
+      }, { status: 429 });
     }
 
+    const body = await req.json();
+    const { name, role, existingCharacters, model } = characterRequestSchema.parse(body);
+
     const existingCharactersContext = existingCharacters
-      ?.map((c: { name: string; role: string; description: string }) => `${c.name} (${c.role}): ${c.description}`)
+      ?.map((c) => `${c.name} (${c.role}): ${c.description}`)
       .join('\n');
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a creative writing assistant specializing in character development. Create detailed, consistent character profiles that fit naturally within the story world and interact meaningfully with existing characters.',
-        },
-        {
-          role: 'user',
-          content: `Create a detailed character profile for a character named "${name}" who is ${role || 'a character'} in the story.\n\nExisting characters in the story:\n${existingCharactersContext || 'No other characters defined yet.'}\n\nProvide:\n1. A physical description\n2. A compelling background story\n3. Distinct personality traits\n4. Key goals and motivations\n5. A detailed prompt for generating a character portrait (focus on physical appearance, style, and notable features)`,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    const systemPrompt = `You are a creative writing assistant specializing in character development. Create detailed, consistent character profiles that fit naturally within the story world and interact meaningfully with existing characters.
 
-    const generatedContent = completion.choices[0]?.message?.content || '';
+Please structure your response with clear sections:
+1. PHYSICAL DESCRIPTION: Detailed physical appearance
+2. BACKGROUND: Compelling background story
+3. PERSONALITY: Distinct personality traits
+4. GOALS: Key goals and motivations (list format)
+5. PORTRAIT PROMPT: Detailed prompt for generating a character portrait`;
+
+    const characterPrompt = `Create a detailed character profile for a character named "${name}" who is ${role || 'a character'} in the story.
+
+Existing characters in the story:
+${existingCharactersContext || 'No other characters defined yet.'}
+
+Provide comprehensive details about:
+1. Physical appearance and distinctive features
+2. Background story and history
+3. Personality traits and quirks
+4. Goals, motivations, and desires
+5. A detailed portrait description for image generation
+
+Make the character unique, memorable, and well-integrated with existing characters.`;
+
+    const startTime = Date.now();
+    const response = await aiService.generateContent(
+      characterPrompt,
+      model as any,
+      systemPrompt,
+      1200
+    );
+
+    const duration = Date.now() - startTime;
 
     // Parse the generated content into structured sections
+    const generatedContent = response.content;
     const sections = generatedContent.split('\n\n');
-    const response = {
+    const parsedResponse = {
       description: '',
       background: '',
       personality: '',
@@ -49,31 +83,60 @@ export async function POST(req: Request) {
     };
 
     sections.forEach((section: string) => {
-      if (section.toLowerCase().includes('physical description')) {
-        response.description = section.replace(/^physical\s*description:?\s*/i, '');
-      } else if (section.toLowerCase().includes('background')) {
-        response.background = section.replace(/^background:?\s*/i, '');
-      } else if (section.toLowerCase().includes('personality')) {
-        response.personality = section.replace(/^personality:?\s*/i, '');
-      } else if (section.toLowerCase().includes('goals')) {
-        const goalsText = section.replace(/^goals:?\s*/i, '');
-        response.goals = goalsText.split('\n')
+      const lowerSection = section.toLowerCase();
+      if (lowerSection.includes('physical description')) {
+        parsedResponse.description = section.replace(/^.*physical\s*description:?\s*/i, '').trim();
+      } else if (lowerSection.includes('background')) {
+        parsedResponse.background = section.replace(/^.*background:?\s*/i, '').trim();
+      } else if (lowerSection.includes('personality')) {
+        parsedResponse.personality = section.replace(/^.*personality:?\s*/i, '').trim();
+      } else if (lowerSection.includes('goals')) {
+        const goalsText = section.replace(/^.*goals:?\s*/i, '').trim();
+        parsedResponse.goals = goalsText.split('\n')
           .map((goal: string) => goal.replace(/^[\d-.*]\s*/, '').trim())
           .filter(Boolean);
-      } else if (section.toLowerCase().includes('portrait prompt')) {
-        response.imagePrompt = section.replace(/^portrait\s*prompt:?\s*/i, '');
+      } else if (lowerSection.includes('portrait prompt')) {
+        parsedResponse.imagePrompt = section.replace(/^.*portrait\s*prompt:?\s*/i, '').trim();
       }
+    });
+
+    // If sections weren't clearly marked, use fallback parsing
+    if (!parsedResponse.description && !parsedResponse.background) {
+      const parts = generatedContent.split('\n\n');
+      parsedResponse.description = parts[0] || '';
+      parsedResponse.background = parts[1] || '';
+      parsedResponse.personality = parts[2] || '';
+      parsedResponse.imagePrompt = parts[parts.length - 1] || '';
+    }
+
+    // Record usage
+    await usageStatsService.recordUsage(userId, {
+      tokensUsed: response.tokensUsed,
+      cost: response.cost,
+      model: response.model,
+      interactionType: 'character_generation',
+      prompt: characterPrompt,
+      responseTime: duration,
+      status: 'completed'
     });
 
     return NextResponse.json({
       success: true,
-      ...response,
+      ...parsedResponse,
+      model: response.model,
+      tokensUsed: response.tokensUsed,
+      cost: response.cost
     });
 
   } catch (error) {
     console.error('Error generating character details:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 });
+    }
+
     return NextResponse.json(
-      { error: 'Failed to generate character details' },
+      { error: error instanceof Error ? error.message : 'Failed to generate character details' },
       { status: 500 }
     );
   }

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
-import { ModelSelector } from '@/components/ui/model-selector';
+import ModelSelector from '@/components/ui/model-selector';
 import { OperationLoading } from '@/components/ui/page-loading';
 import { FileSearch, Upload, Brain, FileText } from 'lucide-react';
 
@@ -126,6 +126,8 @@ export function PDFAnalyzer() {
           </CardTitle>
           <CardDescription>
             Upload a PDF to extract text, analyze content, and generate AI-powered insights and summaries.
+            <br />
+            <strong>📊 Result:</strong> Analysis results will appear below this form once processing is complete.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
