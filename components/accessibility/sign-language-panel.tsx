@@ -18,7 +18,7 @@ interface AnimationClip {
   tracks: any[];
 }
 
-export default function SignLanguagePanel({ isOfflineMode }: SignLanguagePanelProps) {
+export function SignLanguagePanel({ isOfflineMode }: SignLanguagePanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentText, setCurrentText] = useState('');
@@ -231,3 +231,5 @@ export default function SignLanguagePanel({ isOfflineMode }: SignLanguagePanelPr
     </Card>
   );
 }
+
+export { SignLanguagePanel as default };

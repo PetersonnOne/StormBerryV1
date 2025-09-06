@@ -14,7 +14,7 @@ interface SettingsPanelProps {
   setContrast: (contrast: string) => void;
 }
 
-export default function SettingsPanel({
+export function SettingsPanel({
   theme,
   setTheme,
   fontSize,
@@ -176,3 +176,5 @@ export default function SettingsPanel({
     </Card>
   );
 }
+
+export { SettingsPanel as default };

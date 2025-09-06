@@ -22,7 +22,7 @@ interface Transcript {
   } | null;
 }
 
-export default function ConversationHistory({ isOfflineMode }: ConversationHistoryProps) {
+export function ConversationHistory({ isOfflineMode }: ConversationHistoryProps) {
   const { user } = useUser();
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -224,3 +224,5 @@ export default function ConversationHistory({ isOfflineMode }: ConversationHisto
     </Card>
   );
 }
+
+export { ConversationHistory as default };

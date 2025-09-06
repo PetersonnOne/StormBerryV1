@@ -22,7 +22,7 @@ interface Highlight {
 
 type VoiceMode = 'elevenlabs';
 
-export default function TranscriptionPanel({ isOfflineMode, fontSize }: TranscriptionPanelProps) {
+export function TranscriptionPanel({ isOfflineMode, fontSize }: TranscriptionPanelProps) {
   const { user } = useUser();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -151,7 +151,7 @@ export default function TranscriptionPanel({ isOfflineMode, fontSize }: Transcri
     try {
       recognition.start();
       recognitionRef.current = recognition;
-      toast.info('Starting speech recognition...');
+      toast('Starting speech recognition...');
     } catch (error) {
       console.error('Failed to start recognition:', error);
       toast.error('Failed to start speech recognition');
@@ -169,10 +169,10 @@ export default function TranscriptionPanel({ isOfflineMode, fontSize }: Transcri
         recognitionRef.current.stop();
         recognitionRef.current = null;
       }
-      toast.info('Stopped listening');
+      toast('Stopped listening');
     } else {
       // Start listening
-      toast.info('Preparing to listen...');
+      toast('Preparing to listen...');
     }
     setIsListening(!isListening);
   };
@@ -406,7 +406,7 @@ export default function TranscriptionPanel({ isOfflineMode, fontSize }: Transcri
       };
 
       mediaRecorder.start();
-      toast.info('Recording for 5 seconds...');
+      toast('Recording for 5 seconds...');
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
@@ -628,3 +628,5 @@ export default function TranscriptionPanel({ isOfflineMode, fontSize }: Transcri
     </div>
   );
 }
+
+export { TranscriptionPanel as default };
