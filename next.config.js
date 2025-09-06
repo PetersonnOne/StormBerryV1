@@ -6,6 +6,17 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    forceSwcTransforms: true,
+  },
+  webpack: (config, { isServer }) => {
+    // Fix module resolution issues on case-sensitive filesystems
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname),
+    };
+    return config;
+  },
   images: {
     domains: [
       'localhost', 

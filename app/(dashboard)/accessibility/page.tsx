@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TranscriptionPanel } from '@/components/accessibility/transcription-panel';
-import { SignLanguagePanel } from '@/components/accessibility/sign-language-panel';
-import { SettingsPanel } from '@/components/accessibility/settings-panel';
-import { ConversationHistory } from '@/components/accessibility/conversation-history';
-import { PageLoading } from '@/components/ui/page-loading';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import TranscriptionPanel from '../../../components/accessibility/transcription-panel';
+import SignLanguagePanel from '../../../components/accessibility/sign-language-panel';
+import SettingsPanel from '../../../components/accessibility/settings-panel';
+import ConversationHistory from '../../../components/accessibility/conversation-history';
+import { PageLoading } from '../../../components/ui/page-loading';
 
 type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 type Contrast = 'normal' | 'high';
