@@ -45,7 +45,9 @@ export function EnhancedChat({ selectedModel = 'gemini-2.5-pro' }: EnhancedChatP
       const response = await generateContent(
         input,
         selectedModel as any, // Use selected model
-        'You are a helpful AI assistant. Provide clear, concise, and helpful responses.'
+        'You are a helpful AI assistant. Provide clear, concise, and helpful responses.',
+        1000, // maxTokens
+        undefined // imageData
       )
 
       const assistantMessage: Message = {
@@ -99,10 +101,13 @@ export function EnhancedChat({ selectedModel = 'gemini-2.5-pro' }: EnhancedChatP
         <div className="flex justify-between items-center mb-4 pb-2 border-b">
           <h3 className="text-lg font-semibold">Chat Conversation</h3>
           {messages.length > 0 && (
-            <ExportButton 
-              onExport={prepareExportData}
-              filename="storm-berry-chat"
-            />
+            <div className="flex flex-col items-center gap-1">
+              <ExportButton 
+                data={prepareExportData()}
+                filename={`storm-berry-chat-${new Date().toISOString().split('T')[0]}`}
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400">Export/Download</span>
+            </div>
           )}
         </div>
         <div className="flex-1 overflow-y-auto space-y-4 mb-4">

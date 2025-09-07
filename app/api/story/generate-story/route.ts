@@ -11,7 +11,7 @@ const storyRequestSchema = z.object({
   style: z.string().optional(),
   characters: z.array(z.string()).optional(),
   setting: z.string().optional(),
-  tone: z.enum(['serious', 'humorous', 'dramatic', 'mysterious', 'romantic', 'adventure']).optional(),
+  tone: z.enum(['serious', 'humorous', 'dramatic', 'mysterious', 'romantic', 'adventure', 'neutral']).optional(),
   model: z.string().default('gpt-oss-120b'),
 })
 

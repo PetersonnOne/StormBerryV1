@@ -25,7 +25,8 @@ export function useAIWithStatus(options: UseAIWithStatusOptions = {}) {
     prompt: string,
     model?: any,
     systemPrompt?: string,
-    maxTokens?: number
+    maxTokens?: number,
+    imageData?: string
   ) => {
     setIsLoading(true)
     setIsStatusVisible(true)
@@ -36,6 +37,7 @@ export function useAIWithStatus(options: UseAIWithStatusOptions = {}) {
         model,
         systemPrompt,
         maxTokens,
+        imageData,
         (status: AIStatus) => {
           setCurrentStatus(status)
           

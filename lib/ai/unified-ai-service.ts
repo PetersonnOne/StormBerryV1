@@ -135,6 +135,7 @@ class UnifiedAIService {
     model: ModelType = this.defaultModel,
     systemPrompt?: string,
     maxTokens: number = 1000,
+    imageData?: string,
     onStatusUpdate?: (status: AIStatus) => void
   ): Promise<AIResponse> {
     // Check if model is disabled
