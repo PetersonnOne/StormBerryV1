@@ -110,7 +110,7 @@ export default function ImageInput({ setLoading, onResponse }: ImageInputProps) 
         <ModelSelector
           value={selectedModel}
           onChange={setSelectedModel}
-          includeOnly={['gemini-2.5-pro', 'gemini-2.5-flash']}
+          excludeModels={['gemini-2.5-flash-image']}
         />
       </div>
       

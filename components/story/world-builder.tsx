@@ -42,8 +42,8 @@ export function WorldBuilder() {
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
 
   const exportWorldAsDoc = useCallback(() => {
-    if (!worldData.name.trim()) {
-      toast.error('World name is required for export');
+    if (!worldData.name.trim() && !worldData.description.trim() && worldData.locations.length === 0) {
+      toast.error('Please add some world content before exporting');
       return;
     }
 

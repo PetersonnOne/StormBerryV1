@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, Sparkles, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ModelSelector from '@/components/ui/model-selector';
 
@@ -31,6 +31,72 @@ export function CharacterManager() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
+
+  const exportCharacterAsDoc = useCallback((character: Character) => {
+    if (!character.name.trim()) {
+      toast.error('Character name is required for export');
+      return;
+    }
+
+    try {
+      // Create document content
+      const characterName = character.name || 'Unnamed Character';
+      
+      let docContent = `${characterName}\n\n`;
+      
+      if (character.role) {
+        docContent += `Role: ${character.role}\n\n`;
+      }
+      
+      if (character.description) {
+        docContent += `Description:\n${character.description}\n\n`;
+      }
+      
+      if (character.background) {
+        docContent += `Background:\n${character.background}\n\n`;
+      }
+      
+      if (character.personality) {
+        docContent += `Personality:\n${character.personality}\n\n`;
+      }
+      
+      if (character.goals && character.goals.length > 0) {
+        docContent += `Goals:\n`;
+        character.goals.forEach((goal, index) => {
+          if (goal.trim()) {
+            docContent += `${index + 1}. ${goal}\n`;
+          }
+        });
+        docContent += '\n';
+      }
+      
+      if (character.relationships && character.relationships.length > 0) {
+        docContent += `Relationships:\n`;
+        character.relationships.forEach((rel, index) => {
+          if (rel.relationship.trim()) {
+            docContent += `${index + 1}. ${rel.relationship}\n`;
+          }
+        });
+        docContent += '\n';
+      }
+
+      // Create and download file
+      const blob = new Blob([docContent], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${characterName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_character.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Character exported successfully');
+    } catch (error) {
+      console.error('Error exporting character:', error);
+      toast.error('Failed to export character');
+    }
+  }, []);
 
   const saveCharacters = useCallback(async () => {
     try {
@@ -283,8 +349,20 @@ export function CharacterManager() {
                             Generating...
                           </>
                         ) : (
-                          'Generate Details'
+                          <>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Generate Details
+                          </>
                         )}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => exportCharacterAsDoc(character)}
+                        disabled={!character.name}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Export Character
                       </Button>
 
                       {character.imagePrompt && (

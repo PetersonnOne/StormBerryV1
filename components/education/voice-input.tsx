@@ -194,7 +194,7 @@ export default function VoiceInput({ setLoading, onResponse }: VoiceInputProps) 
         <ModelSelector
           value={selectedModel}
           onChange={setSelectedModel}
-          includeOnly={['gemini-2.5-pro', 'gemini-2.5-flash']}
+          excludeModels={['gemini-2.5-flash-image']}
         />
       </div>
       <div className="flex justify-center">

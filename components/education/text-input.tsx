@@ -69,6 +69,7 @@ export default function TextInput({ setLoading, onResponse }: TextInputProps) {
         <ModelSelector
           value={selectedModel}
           onChange={setSelectedModel}
+          excludeModels={['gemini-2.5-flash-image']}
         />
       </div>
       <Textarea

@@ -19,7 +19,11 @@ interface Message {
   timestamp: Date
 }
 
-export function EnhancedChat() {
+interface EnhancedChatProps {
+  selectedModel?: string;
+}
+
+export function EnhancedChat({ selectedModel = 'gemini-2.5-pro' }: EnhancedChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const { generateContent, isLoading, currentStatus, isStatusVisible, hideStatus } = useAIWithStatus()
@@ -40,7 +44,7 @@ export function EnhancedChat() {
     try {
       const response = await generateContent(
         input,
-        undefined, // Use default model (Gemini 2.5 Pro)
+        selectedModel as any, // Use selected model
         'You are a helpful AI assistant. Provide clear, concise, and helpful responses.'
       )
 

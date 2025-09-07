@@ -5,9 +5,12 @@ import { EnhancedChat } from '@/components/ai/enhanced-chat'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Badge } from '@/components/ui/badge'
 import { PageLoading } from '@/components/ui/page-loading'
+import ModelSelector from '@/components/ui/model-selector'
+import { ModelType } from '@/lib/ai/unified-ai-service'
 
 export default function ChatPage() {
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.5-pro');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -33,19 +36,22 @@ export default function ChatPage() {
             </p>
           </div>
           <div className="text-right">
-            <Badge variant="secondary" className="mb-2">
-              Gemini 2.5 Pro (Default)
-            </Badge>
-            <p className="text-sm opacity-75">
-              Auto-fallback to Flash & GPT-5
-            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">AI Model</label>
+              <ModelSelector 
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+                excludeModels={['gemini-2.5-flash-image']}
+                className="w-[250px]"
+              />
+            </div>
           </div>
         </div>
       </div>
       
       <div className="flex-1 flex flex-col">
         <Suspense fallback={<LoadingSpinner />}>
-          <EnhancedChat />
+          <EnhancedChat selectedModel={selectedModel} />
         </Suspense>
       </div>
     </div>

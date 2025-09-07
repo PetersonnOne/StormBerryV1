@@ -92,8 +92,11 @@ ${content}`;
   }, [editor, storyMetadata]);
 
   const generateSuggestions = useCallback(async () => {
-    if (!editor?.getText()?.trim()) {
-      toast.error('Please write some content first');
+    const editorContent = editor?.getText()?.trim();
+    const hasMetadata = storyMetadata.title?.trim() || storyMetadata.genre?.trim() || storyMetadata.synopsis?.trim();
+    
+    if (!editorContent && !hasMetadata) {
+      toast.error('Please write some content or fill in story details first');
       return;
     }
 
@@ -103,7 +106,7 @@ ${content}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `Continue this story: ${editor.getText()}`,
+          prompt: editorContent ? `Continue this story: ${editorContent}` : `Create a story with the following details: Title: ${storyMetadata.title || 'Untitled'}, Genre: ${storyMetadata.genre || 'General'}, Synopsis: ${storyMetadata.synopsis || 'No synopsis'}`,
           genre: storyMetadata.genre || 'general',
           length: 'short',
           style: 'narrative',
